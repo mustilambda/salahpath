@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="SalahPath — A beautifully designed Salah reminder and motivation tracker. Stay devoted, track your prayers, earn rewards."/>
+<title>SalahPath — Salah Reminder & Rewards</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface": "#f8f9fa", "on-secondary-container": "#663500", "on-primary-fixed": "#002117",
+          "on-surface": "#191c1d", "secondary-fixed-dim": "#ffb77d", "background": "#f8f9fa",
+          "outline-variant": "#bfc9c3", "inverse-surface": "#2e3132", "tertiary-container": "#3b4745",
+          "on-tertiary-fixed": "#121e1c", "error-container": "#ffdad6", "on-secondary-fixed-variant": "#6e3900",
+          "secondary": "#904d00", "tertiary": "#25312f", "on-tertiary-container": "#a8b5b2",
+          "on-tertiary": "#ffffff", "on-secondary": "#ffffff", "surface-container-lowest": "#ffffff",
+          "tertiary-fixed-dim": "#bcc9c6", "on-error-container": "#93000a", "on-surface-variant": "#404944",
+          "primary-fixed": "#b0f0d6", "surface-bright": "#f8f9fa", "on-background": "#191c1d",
+          "secondary-container": "#fe932c", "on-primary-fixed-variant": "#0b513d",
+          "on-tertiary-fixed-variant": "#3d4947", "secondary-fixed": "#ffdcc3",
+          "surface-container-low": "#f3f4f5", "primary-fixed-dim": "#95d3ba", "tertiary-fixed": "#d8e5e2",
+          "error": "#ba1a1a", "on-primary-container": "#80bea6", "surface-container": "#edeeef",
+          "primary-container": "#064e3b", "surface-tint": "#2b6954", "surface-dim": "#d9dadb",
+          "surface-container-high": "#e7e8e9", "on-secondary-fixed": "#2f1500", "outline": "#707974",
+          "inverse-on-surface": "#f0f1f2", "on-error": "#ffffff", "surface-container-highest": "#e1e3e4",
+          "on-primary": "#ffffff", "inverse-primary": "#95d3ba", "surface-variant": "#e1e3e4", "primary": "#003527"
+        },
+        borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+        spacing: {
+          "unit": "8px", "stack-gap-sm": "8px", "container-padding-desktop": "64px",
+          "gutter": "16px", "stack-gap-md": "16px", "stack-gap-lg": "32px", "container-padding-mobile": "24px"
+        },
+        fontFamily: {
+          "body-md": ["Inter"], "label-sm": ["Inter"], "body-lg": ["Inter"],
+          "headline-lg-mobile": ["Playfair Display"], "headline-md": ["Playfair Display"],
+          "display-lg": ["Playfair Display"], "headline-lg": ["Playfair Display"], "label-md": ["Inter"]
+        },
+        fontSize: {
+          "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+          "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500"}],
+          "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+          "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+          "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+          "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+          "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+          "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}]
+        }
+      }
+    }
+  }
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .bg-pattern-subtle { background-color: #f8f9fa; background-image: radial-gradient(#064e3b 0.5px, transparent 0.5px); background-size: 24px 24px; opacity: 0.03; pointer-events: none; }
+  .bg-pattern { background-color: #f8f9fa; background-image: radial-gradient(#064e3b08 1px, transparent 1px); background-size: 32px 32px; }
+  .glass-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); }
+  @keyframes pulse-soft { 0%,100%{opacity:1} 50%{opacity:0.8} }
+  .animate-pulse-soft { animation: pulse-soft 3s cubic-bezier(0.4,0,0.6,1) infinite; }
+  @keyframes glow { 0%,100%{box-shadow:0 0 20px rgba(217,119,6,0.1)} 50%{box-shadow:0 0 40px rgba(217,119,6,0.3)} }
+  .breathing-glow { animation: glow 4s ease-in-out infinite; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  /* Screen transition */
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .screen.active { animation: fadeIn 0.25s ease; }
+  /* Nav badge */
+  .nav-demo-badge { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 100; background: #064e3b; color: #fff; font-size: 12px; padding: 6px 20px; border-radius: 0 0 12px 12px; font-family: Inter, sans-serif; letter-spacing: 0.03em; white-space: nowrap; }
+</style>
+</head>
+<body class="bg-surface text-on-surface font-body-md">
+
+<!-- Demo nav badge -->
+<div class="nav-demo-badge">SalahPath — UI Prototype</div>
+
+<!-- ======================== SCREEN SWITCHER ======================== -->
+<nav style="position:fixed;bottom:0;left:0;width:100%;z-index:999;background:#fff;border-top:1px solid #edeeef;display:flex;justify-content:center;gap:0;padding:0;">
+  <button onclick="showScreen('dashboard')" id="tab-dashboard" class="tab-btn flex flex-col items-center py-3 px-6 gap-1 text-primary border-t-2 border-primary" style="flex:1;max-width:160px;background:none;cursor:pointer;font-family:Inter,sans-serif;">
+    <span class="material-symbols-outlined" style="font-size:20px">dashboard</span>
+    <span style="font-size:11px;font-weight:600">Dashboard</span>
+  </button>
+  <button onclick="showScreen('notification')" id="tab-notification" class="tab-btn flex flex-col items-center py-3 px-6 gap-1 text-on-surface-variant border-t-2 border-transparent" style="flex:1;max-width:160px;background:none;cursor:pointer;font-family:Inter,sans-serif;">
+    <span class="material-symbols-outlined" style="font-size:20px">notifications_active</span>
+    <span style="font-size:11px;font-weight:600">Reminder</span>
+  </button>
+  <button onclick="showScreen('settings')" id="tab-settings" class="tab-btn flex flex-col items-center py-3 px-6 gap-1 text-on-surface-variant border-t-2 border-transparent" style="flex:1;max-width:160px;background:none;cursor:pointer;font-family:Inter,sans-serif;">
+    <span class="material-symbols-outlined" style="font-size:20px">settings</span>
+    <span style="font-size:11px;font-weight:600">Settings</span>
+  </button>
+  <button onclick="showScreen('rewards')" id="tab-rewards" class="tab-btn flex flex-col items-center py-3 px-6 gap-1 text-on-surface-variant border-t-2 border-transparent" style="flex:1;max-width:160px;background:none;cursor:pointer;font-family:Inter,sans-serif;">
+    <span class="material-symbols-outlined" style="font-size:20px">workspace_premium</span>
+    <span style="font-size:11px;font-weight:600">Rewards</span>
+  </button>
+</nav>
+
+<!-- ======================== SCREEN: DASHBOARD ======================== -->
+<div id="screen-dashboard" class="screen active" style="padding-bottom:80px;">
+  <aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline-variant hidden lg:flex flex-col py-stack-gap-lg z-40">
+    <div class="px-6 mb-8">
+      <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
+      <p class="text-on-surface-variant font-label-md text-label-md">Stay Devoted</p>
+    </div>
+    <nav class="flex-grow space-y-2">
+      <a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 mx-2" href="#">
+        <span class="material-symbols-outlined">dashboard</span>
+        <span class="font-label-md text-label-md">Dashboard</span>
+      </a>
+      <a onclick="showScreen('settings')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 transition-colors duration-200 cursor-pointer">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="font-label-md text-label-md">Settings</span>
+      </a>
+      <a onclick="showScreen('rewards')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 transition-colors duration-200 cursor-pointer">
+        <span class="material-symbols-outlined">workspace_premium</span>
+        <span class="font-label-md text-label-md">Rewards Log</span>
+      </a>
+    </nav>
+    <div class="px-4 mt-auto mb-8">
+      <button class="w-full bg-primary py-3 px-4 rounded-xl text-on-primary font-label-md text-label-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+        <span class="material-symbols-outlined">sync</span> Update Times
+      </button>
+    </div>
+  </aside>
+  <header class="lg:hidden flex justify-between items-center w-full px-6 h-16 fixed top-6 left-0 bg-surface shadow-[0px_4px_20px_rgba(6,78,59,0.05)] z-50">
+    <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
+    <div class="flex items-center gap-4">
+      <span class="text-label-md font-label-md text-primary">Fajr: 05:30 AM</span>
+      <span class="material-symbols-outlined text-primary">notifications_active</span>
+    </div>
+  </header>
+  <main class="lg:ml-64 min-h-screen relative pt-24 lg:pt-0 pb-8">
+    <div class="bg-pattern-subtle absolute inset-0"></div>
+    <div class="max-w-[1024px] mx-auto px-6 lg:px-16 py-8 relative">
+      <section class="mb-8">
+        <div class="relative overflow-hidden rounded-2xl bg-primary-container p-8 lg:p-12 text-on-primary-container shadow-[0px_4px_20px_rgba(6,78,59,0.05)] border border-primary/10">
+          <div class="absolute top-0 right-0 p-4 opacity-10">
+            <span class="material-symbols-outlined text-[120px]" style="font-variation-settings:'FILL' 1;">mosque</span>
+          </div>
+          <div class="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div>
+              <p class="text-on-primary-container/80 font-label-md text-label-md uppercase tracking-widest mb-2">Next Prayer</p>
+              <h2 class="font-headline-lg text-headline-lg md:text-display-lg text-white mb-1">Dhuhr</h2>
+              <p class="font-headline-md text-headline-md text-on-primary-fixed flex items-center gap-2">
+                <span class="material-symbols-outlined">schedule</span> 12:45 PM
+              </p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-center md:min-w-[200px]">
+              <p class="text-on-primary-container/70 text-label-sm font-label-sm mb-2 uppercase">Time Remaining</p>
+              <span class="text-headline-lg font-headline-lg text-secondary-container" id="countdown">02:14:05</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+        <div class="md:col-span-7 bg-white rounded-2xl p-8 shadow-[0px_4px_20px_rgba(6,78,59,0.05)] border border-outline-variant/30">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h3 class="font-headline-md text-headline-md text-primary">Daily Devotion</h3>
+              <p class="text-on-surface-variant text-body-md font-body-md">Your spiritual journey today</p>
+            </div>
+            <div class="text-right">
+              <span class="text-headline-md font-headline-md text-secondary">3/5</span>
+              <p class="text-label-sm font-label-sm uppercase text-on-surface-variant">Completed</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap justify-between gap-4">
+            <div class="flex flex-col items-center gap-3 group">
+              <div class="w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container shadow-sm border-2 border-secondary/20 transition-transform group-hover:scale-110">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">check_circle</span>
+              </div>
+              <span class="text-label-md font-label-md text-on-surface-variant">Fajr</span>
+            </div>
+            <div class="flex flex-col items-center gap-3 group">
+              <div class="w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container shadow-sm border-2 border-secondary/20 transition-transform group-hover:scale-110">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">check_circle</span>
+              </div>
+              <span class="text-label-md font-label-md text-on-surface-variant">Sunrise</span>
+            </div>
+            <div class="flex flex-col items-center gap-3 group">
+              <div class="w-14 h-14 rounded-full bg-surface-container-high border-2 border-dashed border-outline flex items-center justify-center text-on-surface-variant animate-pulse-soft">
+                <span class="material-symbols-outlined">radio_button_unchecked</span>
+              </div>
+              <span class="text-label-md font-label-md text-primary font-bold">Dhuhr</span>
+            </div>
+            <div class="flex flex-col items-center gap-3 group opacity-40">
+              <div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+                <span class="material-symbols-outlined">lock</span>
+              </div>
+              <span class="text-label-md font-label-md text-on-surface-variant">Asr</span>
+            </div>
+            <div class="flex flex-col items-center gap-3 group opacity-40">
+              <div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+                <span class="material-symbols-outlined">lock</span>
+              </div>
+              <span class="text-label-md font-label-md text-on-surface-variant">Maghrib</span>
+            </div>
+          </div>
+          <div class="mt-10 p-4 bg-surface-container-low rounded-xl flex items-center gap-4">
+            <div class="bg-secondary-container/20 p-2 rounded-lg">
+              <span class="material-symbols-outlined text-secondary">military_tech</span>
+            </div>
+            <div>
+              <p class="text-label-md font-label-md text-primary">Current Streak: 12 Days</p>
+              <p class="text-label-sm font-label-sm text-on-surface-variant">Maintain your devotion for a golden badge.</p>
+            </div>
+          </div>
+        </div>
+        <div class="md:col-span-5 flex flex-col gap-6">
+          <div class="bg-white rounded-2xl p-8 shadow-[0px_4px_20px_rgba(6,78,59,0.05)] border border-outline-variant/30 flex-grow relative overflow-hidden">
+            <div class="absolute -top-4 -right-4 w-24 h-24 bg-secondary-fixed/30 rounded-full blur-2xl"></div>
+            <div class="relative z-10">
+              <span class="material-symbols-outlined text-secondary mb-4 text-4xl">format_quote</span>
+              <h4 class="font-headline-md text-headline-md text-primary mb-4 italic leading-relaxed">
+                "The closest a servant comes to his Lord is when he is prostrating himself, so make many supplications in it."
+              </h4>
+              <div class="flex items-center gap-3">
+                <div class="h-[1px] w-8 bg-outline"></div>
+                <span class="text-label-md font-label-md text-on-surface-variant">Prophet Muhammad (ﷺ)</span>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <button onclick="showScreen('notification')" class="bg-primary text-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center gap-3">
+              <span class="material-symbols-outlined text-3xl">task_alt</span>
+              <span class="font-label-md text-label-md">Log Prayer</span>
+            </button>
+            <button onclick="showScreen('rewards')" class="bg-white border border-primary text-primary p-6 rounded-2xl shadow-sm hover:bg-surface-container-low transition-all flex flex-col items-center justify-center gap-3">
+              <span class="material-symbols-outlined text-3xl">military_tech</span>
+              <span class="font-label-md text-label-md">View Rewards</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <section class="mt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
+        <div class="md:col-span-8 h-64 relative rounded-2xl overflow-hidden bg-primary-container flex items-end p-8">
+          <div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex items-end p-8">
+            <div>
+              <p class="text-white/80 font-label-sm text-label-sm uppercase tracking-widest mb-1">Weekly Focus</p>
+              <h3 class="text-white font-headline-md text-headline-md">Mindfulness in Sujud</h3>
+            </div>
+          </div>
+        </div>
+        <div class="md:col-span-4 h-64 bg-secondary-fixed rounded-2xl p-8 flex flex-col justify-between shadow-[0px_4px_20px_rgba(6,78,59,0.05)]">
+          <div class="flex justify-between items-start">
+            <span class="material-symbols-outlined text-on-secondary-fixed text-4xl">wb_sunny</span>
+            <span class="text-on-secondary-fixed-variant font-label-md text-label-md">Current Weather</span>
+          </div>
+          <div>
+            <p class="text-on-secondary-fixed text-display-lg font-display-lg">24°C</p>
+            <p class="text-on-secondary-fixed-variant text-body-md font-body-md">Clear skies in your city</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- ======================== SCREEN: NOTIFICATION ======================== -->
+<div id="screen-notification" class="screen bg-pattern" style="padding-bottom:80px;min-height:100vh;">
+  <header class="flex justify-between items-center w-full px-6 h-16 fixed top-6 left-0 bg-surface/80 backdrop-blur-sm z-50">
+    <div class="font-headline-md text-headline-md font-bold text-primary">SalahPath</div>
+    <div class="flex items-center gap-4">
+      <span class="font-label-md text-label-md text-primary bg-primary-fixed px-3 py-1 rounded-full">Fajr: 05:30 AM</span>
+    </div>
+  </header>
+  <main class="w-full max-w-4xl mx-auto px-6 md:px-16 py-8 flex flex-col items-center justify-center min-h-screen relative pt-28">
+    <div class="glass-card rounded-2xl p-8 md:p-12 w-full text-center shadow-[0px_4px_20px_rgba(6,78,59,0.05)] border border-primary/5 breathing-glow">
+      <div class="mb-4 inline-flex items-center gap-2 px-4 py-2 bg-primary-container text-white rounded-full">
+        <span class="material-symbols-outlined text-[20px]">schedule</span>
+        <span class="font-label-md text-label-md uppercase tracking-widest">It is time for Asr</span>
+      </div>
+      <h1 class="font-display-lg text-display-lg text-primary mb-4 md:mb-8">A Moment for Connection</h1>
+      <div class="relative py-8 px-6 md:px-12 bg-surface/50 rounded-xl mb-8 border-l-4 border-secondary">
+        <span class="material-symbols-outlined absolute -top-4 left-6 text-secondary text-4xl opacity-50">format_quote</span>
+        <p class="font-headline-md text-headline-md text-on-surface italic leading-relaxed">
+          "Verily, in the remembrance of Allah do hearts find rest."
+        </p>
+        <cite class="block mt-4 font-label-md text-label-md text-on-surface-variant not-italic">— Surah Ar-Ra'd 13:28</cite>
+      </div>
+      <div class="flex items-center justify-center gap-3 mb-8 bg-secondary-fixed/30 py-3 px-6 rounded-full w-fit mx-auto">
+        <span class="material-symbols-outlined text-secondary">military_tech</span>
+        <p class="font-label-md text-label-md text-on-secondary-container">Complete this prayer to reach your <span class="font-bold">5-day streak!</span></p>
+      </div>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+        <button onclick="handlePrayingNow()" class="w-full md:w-auto bg-primary text-white font-bold px-10 py-4 rounded-xl flex items-center justify-center gap-3 transition-all hover:opacity-90 group">
+          <span class="material-symbols-outlined">auto_awesome</span> I'm Praying Now
+        </button>
+        <button onclick="handleRemindMe(this)" class="w-full md:w-auto border-2 border-outline-variant text-on-surface-variant font-bold px-10 py-4 rounded-xl transition-all hover:bg-surface-container hover:text-primary">
+          Remind me in 5 mins
+        </button>
+      </div>
+    </div>
+    <div class="fixed bottom-24 opacity-0 pointer-events-none transition-all duration-700 translate-y-10" id="success-toast">
+      <div class="bg-primary-container text-white px-8 py-4 rounded-full shadow-2xl flex items-center gap-3">
+        <span class="material-symbols-outlined text-secondary-fixed">workspace_premium</span>
+        <span class="font-label-md">Reward points earned! May your prayer be accepted.</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ======================== SCREEN: SETTINGS ======================== -->
+<div id="screen-settings" class="screen" style="padding-bottom:80px;min-height:100vh;">
+  <header class="flex justify-between items-center w-full px-6 h-16 sticky top-0 bg-surface shadow-[0px_4px_20px_rgba(6,78,59,0.05)] z-50 lg:hidden">
+    <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
+    <div class="flex items-center gap-4 text-primary">
+      <span class="font-label-md text-label-md">Fajr: 05:30 AM</span>
+      <span class="material-symbols-outlined">notifications_active</span>
+    </div>
+  </header>
+  <div class="flex min-h-screen">
+    <aside class="hidden lg:flex flex-col py-8 h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline-variant z-40">
+      <div class="px-6 mb-8">
+        <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
+        <p class="text-on-surface-variant text-label-sm font-label-sm">Stay Devoted</p>
+      </div>
+      <nav class="flex-1 space-y-2">
+        <a onclick="showScreen('dashboard')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 cursor-pointer">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span class="font-label-md text-label-md">Dashboard</span>
+        </a>
+        <a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 mx-2">
+          <span class="material-symbols-outlined">settings</span>
+          <span class="font-label-md text-label-md">Settings</span>
+        </a>
+        <a onclick="showScreen('rewards')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 cursor-pointer">
+          <span class="material-symbols-outlined">workspace_premium</span>
+          <span class="font-label-md text-label-md">Rewards Log</span>
+        </a>
+      </nav>
+    </aside>
+    <main class="flex-1 lg:ml-64 px-6 lg:px-16 py-8 max-w-[1024px] mx-auto w-full">
+      <section class="mb-10 text-center md:text-left">
+        <h2 class="font-headline-lg text-headline-lg text-primary mb-2">Prayer Time Settings</h2>
+        <div class="bg-surface-container-low border border-outline-variant rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-6 items-start">
+          <div class="bg-primary-container text-on-primary-container p-3 rounded-full flex items-center justify-center">
+            <span class="material-symbols-outlined text-[32px]">info</span>
+          </div>
+          <div>
+            <h3 class="font-label-md text-label-md text-primary mb-1">Why use manual settings?</h3>
+            <p class="text-on-surface-variant text-body-md max-w-2xl">When automatic geolocation is unavailable or inaccurate, manual settings let you precisely control your prayer schedule. Enter your local prayer times from a trusted local mosque or Islamic authority.</p>
+          </div>
+        </div>
+      </section>
+      <section class="bg-white rounded-2xl shadow-[0px_4px_20px_rgba(6,78,59,0.05)] border border-outline-variant/30 overflow-hidden mb-8">
+        <div class="px-8 py-6 border-b border-outline-variant/30 flex items-center gap-4">
+          <span class="material-symbols-outlined text-primary text-2xl">schedule</span>
+          <h3 class="font-headline-md text-headline-md text-primary">Daily Prayer Times</h3>
+        </div>
+        <div class="divide-y divide-outline-variant/20">
+          <div class="flex items-center justify-between px-8 py-5 hover:bg-surface-container-low transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center"><span class="material-symbols-outlined text-primary text-[18px]">brightness_5</span></div>
+              <div><p class="font-label-md text-label-md text-on-surface">Fajr</p><p class="text-label-sm font-label-sm text-on-surface-variant">Dawn Prayer</p></div>
+            </div>
+            <input type="time" value="05:30" class="border border-outline-variant rounded-xl px-4 py-2 font-label-md text-label-md text-primary bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/30"/>
+          </div>
+          <div class="flex items-center justify-between px-8 py-5 hover:bg-surface-container-low transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center"><span class="material-symbols-outlined text-secondary text-[18px]">wb_sunny</span></div>
+              <div><p class="font-label-md text-label-md text-on-surface">Dhuhr</p><p class="text-label-sm font-label-sm text-on-surface-variant">Midday Prayer</p></div>
+            </div>
+            <input type="time" value="12:45" class="border border-outline-variant rounded-xl px-4 py-2 font-label-md text-label-md text-primary bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/30"/>
+          </div>
+          <div class="flex items-center justify-between px-8 py-5 hover:bg-surface-container-low transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center"><span class="material-symbols-outlined text-tertiary text-[18px]">light_mode</span></div>
+              <div><p class="font-label-md text-label-md text-on-surface">Asr</p><p class="text-label-sm font-label-sm text-on-surface-variant">Afternoon Prayer</p></div>
+            </div>
+            <input type="time" value="16:15" class="border border-outline-variant rounded-xl px-4 py-2 font-label-md text-label-md text-primary bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/30"/>
+          </div>
+          <div class="flex items-center justify-between px-8 py-5 hover:bg-surface-container-low transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-primary-fixed-dim flex items-center justify-center"><span class="material-symbols-outlined text-primary text-[18px]">wb_twilight</span></div>
+              <div><p class="font-label-md text-label-md text-on-surface">Maghrib</p><p class="text-label-sm font-label-sm text-on-surface-variant">Sunset Prayer</p></div>
+            </div>
+            <input type="time" value="19:42" class="border border-outline-variant rounded-xl px-4 py-2 font-label-md text-label-md text-primary bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/30"/>
+          </div>
+          <div class="flex items-center justify-between px-8 py-5 hover:bg-surface-container-low transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-inverse-surface flex items-center justify-center"><span class="material-symbols-outlined text-inverse-on-surface text-[18px]">dark_mode</span></div>
+              <div><p class="font-label-md text-label-md text-on-surface">Isha</p><p class="text-label-sm font-label-sm text-on-surface-variant">Night Prayer</p></div>
+            </div>
+            <input type="time" value="21:05" class="border border-outline-variant rounded-xl px-4 py-2 font-label-md text-label-md text-primary bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/30"/>
+          </div>
+        </div>
+      </section>
+      <section class="bg-white rounded-2xl shadow-[0px_4px_20px_rgba(6,78,59,0.05)] border border-outline-variant/30 overflow-hidden mb-8">
+        <div class="px-8 py-6 border-b border-outline-variant/30 flex items-center gap-4">
+          <span class="material-symbols-outlined text-primary text-2xl">notifications</span>
+          <h3 class="font-headline-md text-headline-md text-primary">Notification Preferences</h3>
+        </div>
+        <div class="divide-y divide-outline-variant/20">
+          <div class="flex items-center justify-between px-8 py-5">
+            <div><p class="font-label-md text-label-md text-on-surface">Prayer reminder alerts</p><p class="text-label-sm font-label-sm text-on-surface-variant">Notify 15 minutes before prayer</p></div>
+            <button onclick="toggleSwitch(this)" class="relative w-12 h-6 rounded-full transition-colors duration-300 bg-primary flex items-center">
+              <div class="absolute right-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-300"></div>
+            </button>
+          </div>
+          <div class="flex items-center justify-between px-8 py-5">
+            <div><p class="font-label-md text-label-md text-on-surface">Motivational quotes</p><p class="text-label-sm font-label-sm text-on-surface-variant">Daily hadith and Quranic verses</p></div>
+            <button onclick="toggleSwitch(this)" class="relative w-12 h-6 rounded-full transition-colors duration-300 bg-primary flex items-center">
+              <div class="absolute right-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-300"></div>
+            </button>
+          </div>
+          <div class="flex items-center justify-between px-8 py-5">
+            <div><p class="font-label-md text-label-md text-on-surface">Streak notifications</p><p class="text-label-sm font-label-sm text-on-surface-variant">Celebrate your prayer streaks</p></div>
+            <button onclick="toggleSwitch(this)" class="relative w-12 h-6 rounded-full transition-colors duration-300 bg-outline-variant flex items-center">
+              <div class="absolute left-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-300"></div>
+            </button>
+          </div>
+        </div>
+      </section>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <button class="flex-1 bg-primary text-on-primary py-4 px-8 rounded-xl font-label-md text-label-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+          <span class="material-symbols-outlined">save</span> Save Settings
+        </button>
+        <button class="flex-1 border border-outline-variant text-on-surface-variant py-4 px-8 rounded-xl font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined">restart_alt</span> Reset to Default
+        </button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ======================== SCREEN: REWARDS ======================== -->
+<div id="screen-rewards" class="screen" style="padding-bottom:80px;min-height:100vh;">
+  <header class="flex justify-between items-center w-full px-6 h-16 sticky top-0 bg-surface shadow-[0px_4px_20px_rgba(6,78,59,0.05)] z-50 lg:hidden">
+    <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
+    <span class="material-symbols-outlined text-primary">workspace_premium</span>
+  </header>
+  <div class="flex min-h-screen">
+    <aside class="hidden lg:flex flex-col py-8 h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline-variant z-40">
+      <div class="px-6 mb-8">
+        <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
+        <p class="text-on-surface-variant text-label-sm font-label-sm">Stay Devoted</p>
+      </div>
+      <nav class="flex-1 space-y-2">
+        <a onclick="showScreen('dashboard')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 cursor-pointer">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span class="font-label-md text-label-md">Dashboard</span>
+        </a>
+        <a onclick="showScreen('settings')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 cursor-pointer">
+          <span class="material-symbols-outlined">settings</span>
+          <span class="font-label-md text-label-md">Settings</span>
+        </a>
+        <a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 mx-2">
+          <span class="material-symbols-outlined">workspace_premium</span>
+          <span class="font-label-md text-label-md">Rewards Log</span>
+        </a>
+      </nav>
+    </aside>
+    <main class="flex-1 lg:ml-64 px-6 lg:px-16 py-8 max-w-[1024px] mx-auto w-full">
+      <div class="mb-10">
+        <h2 class="font-headline-lg text-headline-lg text-primary mb-2">Rewards & Motivation</h2>
+        <p class="text-on-surface-variant text-body-md font-body-md">Your spiritual achievements and earned badges</p>
+      </div>
+      <!-- Stats row -->
+      <div class="grid grid-cols-3 gap-4 mb-10">
+        <div class="bg-white rounded-2xl p-6 text-center shadow-[0px_4px_20px_rgba(6,78,59,0.05)] border border-outline-variant/30">
+          <p class="text-display-lg font-display-lg text-primary">12</p>
+          <p class="text-label-sm font-label-sm text-on-surface-variant uppercase">Day Streak</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 text-center shadow-[0px_4px_20px_rgba(6,78,59,0.05)] border border-outline-variant/30">
+          <p class="text-display-lg font-display-lg text-secondary">87</p>
+          <p class="text-label-sm font-label-sm text-on-surface-variant uppercase">Prayers Logged</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 text-center shadow-[0px_4px_20px_rgba(6,78,59,0.05)] border border-outline-variant/30">
+          <p class="text-display-lg font-display-lg text-primary">6</p>
+          <p class="text-label-sm font-label-sm text-on-surface-variant uppercase">Badges Earned</p>
+        </div>
+      </div>
+      <!-- Badges -->
+      <div class="bg-white rounded-2xl p-8 shadow-[0px_4px_20px_rgba(6,78,59,0.05)] border border-outline-variant/30 mb-8">
+        <h3 class="font-headline-md text-headline-md text-primary mb-6">Achievement Badges</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div class="group flex flex-col items-center gap-3 cursor-pointer" onclick="this.classList.toggle('scale-95')">
+            <div class="w-20 h-20 rounded-full bg-secondary-fixed flex items-center justify-center shadow-md border-2 border-secondary/30 transition-transform group-hover:scale-110">
+              <span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings:'FILL' 1;">local_fire_department</span>
+            </div>
+            <p class="font-label-md text-label-md text-on-surface text-center">First Flame</p>
+            <p class="text-label-sm font-label-sm text-on-surface-variant text-center">7-day streak</p>
+          </div>
+          <div class="group flex flex-col items-center gap-3 cursor-pointer">
+            <div class="w-20 h-20 rounded-full bg-primary-fixed flex items-center justify-center shadow-md border-2 border-primary/30 transition-transform group-hover:scale-110">
+              <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings:'FILL' 1;">star</span>
+            </div>
+            <p class="font-label-md text-label-md text-on-surface text-center">Devotee</p>
+            <p class="text-label-sm font-label-sm text-on-surface-variant text-center">30 prayers</p>
+          </div>
+          <div class="group flex flex-col items-center gap-3 cursor-pointer">
+            <div class="w-20 h-20 rounded-full bg-secondary-fixed flex items-center justify-center shadow-md border-2 border-secondary/30 transition-transform group-hover:scale-110">
+              <span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings:'FILL' 1;">military_tech</span>
+            </div>
+            <p class="font-label-md text-label-md text-on-surface text-center">Steadfast</p>
+            <p class="text-label-sm font-label-sm text-on-surface-variant text-center">50 prayers</p>
+          </div>
+          <div class="group flex flex-col items-center gap-3 cursor-pointer opacity-40">
+            <div class="w-20 h-20 rounded-full bg-surface-container flex items-center justify-center border-2 border-dashed border-outline transition-transform group-hover:scale-110">
+              <span class="material-symbols-outlined text-on-surface-variant text-3xl">lock</span>
+            </div>
+            <p class="font-label-md text-label-md text-on-surface-variant text-center">Golden Path</p>
+            <p class="text-label-sm font-label-sm text-on-surface-variant text-center">100 prayers</p>
+          </div>
+        </div>
+      </div>
+      <!-- Recent activity -->
+      <div class="bg-white rounded-2xl p-8 shadow-[0px_4px_20px_rgba(6,78,59,0.05)] border border-outline-variant/30">
+        <h3 class="font-headline-md text-headline-md text-primary mb-6">Recent Activity</h3>
+        <div class="space-y-4">
+          <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center flex-shrink-0">
+              <span class="material-symbols-outlined text-on-primary-container text-[18px]" style="font-variation-settings:'FILL' 1;">check_circle</span>
+            </div>
+            <div class="flex-1">
+              <p class="font-label-md text-label-md text-on-surface">Fajr prayer logged</p>
+              <p class="text-label-sm font-label-sm text-on-surface-variant">Today at 05:32 AM</p>
+            </div>
+            <span class="text-label-sm font-label-sm text-secondary bg-secondary-fixed/30 px-3 py-1 rounded-full">+10 pts</span>
+          </div>
+          <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0">
+              <span class="material-symbols-outlined text-on-secondary-container text-[18px]" style="font-variation-settings:'FILL' 1;">military_tech</span>
+            </div>
+            <div class="flex-1">
+              <p class="font-label-md text-label-md text-on-surface">Badge unlocked: First Flame</p>
+              <p class="text-label-sm font-label-sm text-on-surface-variant">Yesterday</p>
+            </div>
+            <span class="text-label-sm font-label-sm text-secondary bg-secondary-fixed/30 px-3 py-1 rounded-full">+50 pts</span>
+          </div>
+          <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl">
+            <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center flex-shrink-0">
+              <span class="material-symbols-outlined text-on-primary-container text-[18px]" style="font-variation-settings:'FILL' 1;">check_circle</span>
+            </div>
+            <div class="flex-1">
+              <p class="font-label-md text-label-md text-on-surface">All 5 prayers completed</p>
+              <p class="text-label-sm font-label-sm text-on-surface-variant">2 days ago</p>
+            </div>
+            <span class="text-label-sm font-label-sm text-secondary bg-secondary-fixed/30 px-3 py-1 rounded-full">+25 pts</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.style.color = '#404944';
+      b.style.borderTopColor = 'transparent';
+    });
+    const active = document.getElementById('tab-' + name);
+    if (active) { active.style.color = '#003527'; active.style.borderTopColor = '#003527'; }
+    window.scrollTo(0, 0);
+  }
+
+  // Countdown
+  let h = 2, m = 14, s = 5;
+  function tick() {
+    s--;
+    if (s < 0) { s = 59; m--; }
+    if (m < 0) { m = 59; h--; }
+    const el = document.getElementById('countdown');
+    if (el) el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  setInterval(tick, 1000);
+
+  // Notification screen
+  function handlePrayingNow() {
+    const toast = document.getElementById('success-toast');
+    toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+    toast.classList.add('opacity-100', 'translate-y-0');
+    setTimeout(() => showScreen('dashboard'), 3000);
+  }
+  function handleRemindMe(btn) {
+    btn.textContent = 'See you in 5 minutes ✓';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = 'Remind me in 5 mins'; btn.disabled = false; }, 5000);
+  }
+
+  // Toggle switches
+  function toggleSwitch(btn) {
+    const circle = btn.querySelector('div');
+    const isActive = btn.classList.contains('bg-primary');
+    if (isActive) {
+      btn.classList.remove('bg-primary'); btn.classList.add('bg-outline-variant');
+      circle.style.right = ''; circle.style.left = '4px';
+    } else {
+      btn.classList.add('bg-primary'); btn.classList.remove('bg-outline-variant');
+      circle.style.left = ''; circle.style.right = '4px';
+    }
+  }
+</script>
+</body>
+</html>
