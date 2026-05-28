@@ -314,32 +314,12 @@
 
 <!-- ==================== SCREEN: SETTINGS ==================== -->
 <div id="screen-settings" class="screen" style="padding-bottom:80px;min-height:100vh;">
-  <header class="flex justify-between items-center w-full px-6 h-16 sticky top-0 bg-surface shadow-sm z-50 lg:hidden">
+  <header class="flex justify-between items-center w-full px-6 h-16 sticky top-0 bg-surface shadow-sm z-50">
     <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
     <span class="material-symbols-outlined text-primary">settings</span>
   </header>
-  <div class="flex min-h-screen">
-    <aside class="hidden lg:flex flex-col py-8 h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline-variant z-40">
-      <div class="px-6 mb-8">
-        <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
-        <p class="text-on-surface-variant text-label-sm font-label-sm">Stay Devoted</p>
-      </div>
-      <nav class="flex-1 space-y-2">
-        <a onclick="showScreen('dashboard')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 cursor-pointer">
-          <span class="material-symbols-outlined">dashboard</span>
-          <span class="font-label-md text-label-md">Dashboard</span>
-        </a>
-        <a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 mx-2">
-          <span class="material-symbols-outlined">settings</span>
-          <span class="font-label-md text-label-md">Settings</span>
-        </a>
-        <a onclick="showScreen('rewards')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 cursor-pointer">
-          <span class="material-symbols-outlined">workspace_premium</span>
-          <span class="font-label-md text-label-md">Rewards Log</span>
-        </a>
-      </nav>
-    </aside>
-    <main class="flex-1 lg:ml-64 px-6 lg:px-16 py-8 max-w-[1024px] mx-auto w-full">
+  <div class="min-h-screen">
+    <main class="px-6 py-8 max-w-[900px] mx-auto w-full">
 
       <!-- Prayer Time Source Toggle -->
       <section class="mb-8">
@@ -471,34 +451,36 @@
   </div>
 </div>
 
+<!-- ==================== QAZA CONFIRMATION MODAL ==================== -->
+<div id="qaza-modal" style="display:none;position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);" onclick="if(event.target===this)closeQazaModal()">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:32px 24px 40px;" class="slide-up">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center flex-shrink-0">
+        <span class="material-symbols-outlined text-error text-[20px]">warning</span>
+      </div>
+      <h3 class="font-headline-md text-headline-md text-on-surface">Missed Prayer</h3>
+    </div>
+    <p class="text-on-surface-variant text-body-md mb-2" id="qaza-msg">This prayer time has already passed.</p>
+    <p class="text-on-surface-variant text-[13px] mb-6">You can still log it as <strong class="text-primary">Qaza (make-up prayer)</strong>. It will be marked separately and still count toward your total.</p>
+    <div class="flex flex-col gap-3">
+      <button id="qaza-confirm-btn" class="w-full bg-primary text-on-primary py-4 px-6 rounded-xl font-label-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+        <span class="material-symbols-outlined text-[18px]">check_circle</span> Yes, log as Qaza
+      </button>
+      <button onclick="closeQazaModal()" class="w-full border border-outline-variant text-on-surface-variant py-4 px-6 rounded-xl font-label-md flex items-center justify-center gap-2 hover:bg-surface-container transition-colors">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== SCREEN: REWARDS ==================== -->
 <div id="screen-rewards" class="screen" style="padding-bottom:80px;min-height:100vh;">
-  <header class="flex justify-between items-center w-full px-6 h-16 sticky top-0 bg-surface shadow-sm z-50 lg:hidden">
+  <header class="flex justify-between items-center w-full px-6 h-16 sticky top-0 bg-surface shadow-sm z-50">
     <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
     <span class="material-symbols-outlined text-primary">workspace_premium</span>
   </header>
-  <div class="flex min-h-screen">
-    <aside class="hidden lg:flex flex-col py-8 h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline-variant z-40">
-      <div class="px-6 mb-8">
-        <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
-        <p class="text-on-surface-variant text-label-sm font-label-sm">Stay Devoted</p>
-      </div>
-      <nav class="flex-1 space-y-2">
-        <a onclick="showScreen('dashboard')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 cursor-pointer">
-          <span class="material-symbols-outlined">dashboard</span>
-          <span class="font-label-md text-label-md">Dashboard</span>
-        </a>
-        <a onclick="showScreen('settings')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 cursor-pointer">
-          <span class="material-symbols-outlined">settings</span>
-          <span class="font-label-md text-label-md">Settings</span>
-        </a>
-        <a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 mx-2">
-          <span class="material-symbols-outlined">workspace_premium</span>
-          <span class="font-label-md text-label-md">Rewards Log</span>
-        </a>
-      </nav>
-    </aside>
-    <main class="flex-1 lg:ml-64 px-6 lg:px-16 py-8 max-w-[1024px] mx-auto w-full">
+  <div class="min-h-screen">
+    <main class="px-6 py-8 max-w-[900px] mx-auto w-full">
       <div class="mb-10">
         <h2 class="font-headline-lg text-headline-lg text-primary mb-2">Rewards & Motivation</h2>
         <p class="text-on-surface-variant text-body-md">Your spiritual achievements and earned badges</p>
@@ -813,32 +795,42 @@ function renderPrayerCircles() {
     const done = state.todayLogs[p];
     const isNext = p === next.name;
     const pMin = prayerTimesMinutes[p] || 0;
-    const isPast = pMin < nowMin && !done;
-    const isFutureAfterNext = pMin > nowMin && p !== next.name;
+    const isPast = pMin < nowMin && !done && !isNext;
+    const isFuture = pMin > nowMin && !isNext;
 
-    let circleClass, iconHtml, labelClass;
+    let circleClass, iconHtml, labelClass, clickAttr;
 
     if (done) {
-      circleClass = 'bg-secondary-container border-2 border-secondary/20 shadow-sm';
-      iconHtml = `<span class="material-symbols-outlined text-on-secondary-container prayer-icon" style="font-variation-settings:'FILL' 1;">check_circle</span>`;
-      labelClass = 'text-on-surface-variant';
-    } else if (isNext) {
-      circleClass = 'bg-surface-container-high border-2 border-dashed border-primary animate-pulse-soft';
+      const isQaza = done === 'qaza';
+      // Completed — show green for on-time, amber for qaza
+      circleClass = isQaza
+        ? 'bg-secondary-fixed border-2 border-secondary/30 shadow-sm cursor-default'
+        : 'bg-secondary-container border-2 border-secondary/20 shadow-sm cursor-default';
+      iconHtml = `<span class="material-symbols-outlined ${isQaza ? 'text-secondary' : 'text-on-secondary-container'} prayer-icon" style="font-variation-settings:'FILL' 1;">${isQaza ? 'update' : 'check_circle'}</span>`;
+      labelClass = isQaza ? 'text-secondary' : 'text-on-surface-variant';
+      clickAttr = `onclick="showToast('${p} already logged${isQaza ? ' (Qaza)' : ''} ✓', 'check_circle')"`;
+      // Next up — fully clickable, log directly
+      circleClass = 'bg-surface-container-high border-2 border-dashed border-primary animate-pulse-soft cursor-pointer hover:scale-110 transition-transform';
       iconHtml = `<span class="material-symbols-outlined text-primary prayer-icon">radio_button_unchecked</span>`;
       labelClass = 'text-primary font-bold';
+      clickAttr = `onclick="quickLogPrayer('${p}')"`;
     } else if (isPast) {
-      circleClass = 'bg-error-container border-2 border-error/30';
+      // Missed — clickable but shows Qaza warning
+      circleClass = 'bg-error-container border-2 border-error/30 cursor-pointer hover:scale-110 transition-transform';
       iconHtml = `<span class="material-symbols-outlined text-error prayer-icon">warning</span>`;
       labelClass = 'text-error';
+      clickAttr = `onclick="openQazaModal('${p}')"`;
     } else {
-      circleClass = 'bg-surface-container border-2 border-surface-container-high opacity-40';
+      // Future / locked — NOT clickable
+      circleClass = 'bg-surface-container border-2 border-surface-container-high opacity-40 cursor-not-allowed';
       iconHtml = `<span class="material-symbols-outlined text-on-surface-variant prayer-icon">lock</span>`;
       labelClass = 'text-on-surface-variant';
+      clickAttr = '';
     }
 
     return `
-      <div class="flex flex-col items-center gap-3 group cursor-pointer" onclick="quickLogPrayer('${p}')">
-        <div class="w-14 h-14 rounded-full ${circleClass} flex items-center justify-center transition-transform group-hover:scale-110" id="circle-${p}">
+      <div class="flex flex-col items-center gap-3 group" ${clickAttr}>
+        <div class="w-14 h-14 rounded-full ${circleClass} flex items-center justify-center" id="circle-${p}">
           ${iconHtml}
         </div>
         <div class="text-center">
@@ -868,19 +860,40 @@ function renderFullSchedule() {
   if (!container || !state.prayerTimes.Fajr) return;
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
+  const next = getNextPrayer();
 
   container.innerHTML = PRAYERS.map(p => {
     const done = state.todayLogs[p];
+    const isNext = p === next.name;
     const pMin = prayerTimesMinutes[p] || 0;
-    const isNow = pMin <= nowMin && pMin > nowMin - 120 && !done;
-    const bg = done ? 'bg-primary-container/10' : isNow ? 'bg-secondary-fixed/20' : '';
+    const isPast = pMin < nowMin && !done && !isNext;
+    const isFuture = pMin > nowMin && !isNext;
+
+    const bg = done ? 'bg-primary-container/10' : isNext ? 'bg-secondary-fixed/20' : '';
     const pts = done ? `<span class="pts-badge">+10 pts</span>` : '';
-    const status = done ? `<span class="material-symbols-outlined text-on-secondary-container text-[20px]" style="font-variation-settings:'FILL' 1;">check_circle</span>` :
-      isNow ? `<span class="text-label-sm font-label-sm text-secondary bg-secondary-fixed/40 px-3 py-1 rounded-full">Now</span>` :
-      `<span class="text-label-sm font-label-sm text-on-surface-variant">${formatTime12(state.prayerTimes[p])}</span>`;
+
+    let status, rowClick;
+    if (done) {
+      const isQaza = done === 'qaza';
+      status = isQaza
+        ? `<span class="text-label-sm font-label-sm text-secondary bg-secondary-fixed/40 px-3 py-1 rounded-full">Qaza ✓</span>`
+        : `<span class="material-symbols-outlined text-on-secondary-container text-[20px]" style="font-variation-settings:'FILL' 1;">check_circle</span>`;
+      rowClick = `onclick="showToast('${p} already logged${isQaza ? ' (Qaza)' : ''} ✓', 'check_circle')"`;
+    } else if (isNext) {
+      status = `<span class="text-label-sm font-label-sm text-secondary bg-secondary-fixed/40 px-3 py-1 rounded-full">Up Next</span>`;
+      rowClick = `onclick="quickLogPrayer('${p}')"`;
+    } else if (isPast) {
+      status = `<span class="text-label-sm font-label-sm text-error bg-error-container px-3 py-1 rounded-full">Missed</span>`;
+      rowClick = `onclick="openQazaModal('${p}')"`;
+    } else {
+      status = `<span class="text-label-sm font-label-sm text-on-surface-variant">${formatTime12(state.prayerTimes[p])}</span>`;
+      rowClick = ''; // future — not clickable
+    }
+
+    const cursor = isFuture && !done ? 'cursor-not-allowed opacity-60' : 'cursor-pointer';
 
     return `
-      <div class="flex items-center justify-between px-8 py-4 hover:bg-surface-container-low transition-colors ${bg} cursor-pointer" onclick="quickLogPrayer('${p}')">
+      <div class="flex items-center justify-between px-8 py-4 transition-colors ${bg} ${cursor} ${!isFuture ? 'hover:bg-surface-container-low' : ''}" ${rowClick}>
         <div class="flex items-center gap-4">
           <div class="w-10 h-10 rounded-full ${PRAYER_ICON_BG[p]} flex items-center justify-center">
             <span class="material-symbols-outlined ${PRAYER_ICON_COLOR[p]} text-[18px]">${PRAYER_ICONS[p]}</span>
@@ -1292,6 +1305,34 @@ function clearAllData() {
 // =============================================
 // MODAL & UI
 // =============================================
+// =============================================
+// QAZA MODAL
+// =============================================
+function openQazaModal(prayerName) {
+  const modal = document.getElementById('qaza-modal');
+  const msg = document.getElementById('qaza-msg');
+  const confirmBtn = document.getElementById('qaza-confirm-btn');
+  msg.textContent = `${prayerName} prayer time has already passed.`;
+  confirmBtn.onclick = () => { closeQazaModal(); logPrayerQaza(prayerName); };
+  modal.style.display = '';
+}
+function closeQazaModal() {
+  document.getElementById('qaza-modal').style.display = 'none';
+}
+function logPrayerQaza(prayerName) {
+  if (state.todayLogs[prayerName]) { showToast(`${prayerName} already logged`, 'info'); return; }
+  state.todayLogs[prayerName] = 'qaza';
+  state.totalPrayers++;
+  state.points += 10;
+  const now = new Date();
+  state.activityLog = state.activityLog || [];
+  state.activityLog.push({ label:`${prayerName} logged as Qaza`, time: now.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'}), pts:10, type:'prayer' });
+  checkBadges();
+  saveState(state);
+  renderAll();
+  showToast(`${prayerName} logged as Qaza. May Allah accept it. +10 pts`, 'check_circle');
+}
+
 function openLogPrayer() {
   renderQuickLogModal();
   document.getElementById('log-modal').style.display = '';
