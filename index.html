@@ -152,45 +152,20 @@
 
 <!-- ==================== SCREEN: DASHBOARD ==================== -->
 <div id="screen-dashboard" class="screen active" style="padding-bottom:80px;">
-  <!-- Desktop sidebar -->
-  <aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline-variant hidden lg:flex flex-col py-8 z-40">
-    <div class="px-6 mb-8">
-      <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
-      <p class="text-on-surface-variant font-label-md text-label-md">Stay Devoted</p>
-    </div>
-    <nav class="flex-grow space-y-2">
-      <a id="side-dashboard" class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 mx-2 cursor-pointer">
-        <span class="material-symbols-outlined">dashboard</span>
-        <span class="font-label-md text-label-md">Dashboard</span>
-      </a>
-      <a onclick="showScreen('settings')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 transition-colors cursor-pointer">
-        <span class="material-symbols-outlined">settings</span>
-        <span class="font-label-md text-label-md">Settings</span>
-      </a>
-      <a onclick="showScreen('rewards')" class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 mx-2 transition-colors cursor-pointer">
-        <span class="material-symbols-outlined">workspace_premium</span>
-        <span class="font-label-md text-label-md">Rewards Log</span>
-      </a>
-    </nav>
-    <div class="px-4 mt-auto">
-      <button onclick="refreshTimes()" class="w-full bg-primary py-3 px-4 rounded-xl text-on-primary font-label-md text-label-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-        <span class="material-symbols-outlined">sync</span> Update Times
-      </button>
-    </div>
-  </aside>
-
-  <!-- Mobile header -->
-  <header class="lg:hidden flex justify-between items-center w-full px-6 h-16 sticky top-0 bg-surface shadow-sm z-50">
+  <!-- Header (all screen sizes) -->
+  <header class="flex justify-between items-center w-full px-6 h-16 sticky top-0 bg-surface shadow-sm z-50">
     <h1 class="text-headline-md font-headline-md font-bold text-primary">SalahPath</h1>
     <div class="flex items-center gap-3">
       <span id="hdr-next-label" class="text-label-md font-label-md text-primary text-[12px]">Loading…</span>
-      <span class="material-symbols-outlined text-primary">notifications_active</span>
+      <button onclick="refreshTimes()" class="text-primary hover:opacity-70 transition-opacity">
+        <span class="material-symbols-outlined">sync</span>
+      </button>
     </div>
   </header>
 
-  <main class="lg:ml-64 min-h-screen relative pt-2 lg:pt-0 pb-8">
+  <main class="min-h-screen relative pt-2 pb-8">
     <div class="bg-pattern-subtle absolute inset-0 pointer-events-none"></div>
-    <div class="max-w-[1024px] mx-auto px-6 lg:px-16 py-8 relative">
+    <div class="max-w-[900px] mx-auto px-6 py-8 relative">
 
       <!-- Hero: Next prayer countdown -->
       <section class="mb-8">
