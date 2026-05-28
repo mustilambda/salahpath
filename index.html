@@ -670,8 +670,13 @@ async function fetchAutoTimes() {
       try {
         const geo = await fetch(`https://api.aladhan.com/v1/gToD?latitude=${lat}&longitude=${lng}`);
         const gd = await geo.json();
-        state.location = (gd.data && gd.data.city) ? gd.data.city : `${lat.toFixed(2)}, ${lng.toFixed(2)}`;
-      } catch { state.location = `${lat.toFixed(2)}, ${lng.toFixed(2)}`; }
+        if (gd.data && gd.data.city && gd.data.city !== 'N/A') {
+          state.location = gd.data.country ? `${gd.data.city}, ${gd.data.country}` : gd.data.city;
+        } else {
+          // Try a simple reverse geocode via a public API
+          state.location = `${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E`;
+        }
+      } catch { state.location = `${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E`; }
       state.timeMode = state.timeMode === 'manual' ? 'manual' : 'auto';
       saveState(state);
       parsePrayerTimesToMinutes(times);
@@ -812,10 +817,12 @@ function renderPrayerCircles() {
 
   container.innerHTML = PRAYERS.map(p => {
     const done = state.todayLogs[p];
-    const isNext = p === next.name;
     const pMin = prayerTimesMinutes[p] || 0;
-    const isPast = pMin < nowMin && !done && !isNext;
-    const isFuture = pMin > nowMin && !isNext;
+    const hasStarted = nowMin >= pMin;           // time has arrived
+    const isNext = p === next.name;              // purely for "up next" label
+    const isActive = hasStarted && !done;        // started but not yet logged
+    const isMissed = hasStarted && !done && (nowMin - pMin) > 90;  // well past
+    const isCurrent = hasStarted && !done && (nowMin - pMin) <= 90; // just started
 
     let circleClass, iconHtml, labelClass, clickAttr;
 
@@ -827,22 +834,29 @@ function renderPrayerCircles() {
       iconHtml = `<span class="material-symbols-outlined ${isQaza ? 'text-secondary' : 'text-on-secondary-container'} prayer-icon" style="font-variation-settings:'FILL' 1;">${isQaza ? 'update' : 'check_circle'}</span>`;
       labelClass = isQaza ? 'text-secondary' : 'text-on-surface-variant';
       clickAttr = `onclick="showToast('${p} already logged${isQaza ? ' (Qaza)' : ''} ✓', 'check_circle')"`;
-    } else if (isNext) {
-      circleClass = 'bg-surface-container-high border-2 border-dashed border-primary animate-pulse-soft cursor-pointer hover:scale-110 transition-transform';
-      iconHtml = `<span class="material-symbols-outlined text-primary prayer-icon">radio_button_unchecked</span>`;
-      labelClass = 'text-primary font-bold';
-      clickAttr = `onclick="quickLogPrayer('${p}')"`;
-    } else if (isPast) {
+    } else if (!hasStarted) {
+      // Future — fully locked, no click
+      const isUpNext = isNext;
+      circleClass = isUpNext
+        ? 'bg-surface-container-high border-2 border-dashed border-primary animate-pulse-soft cursor-not-allowed'
+        : 'bg-surface-container border-2 border-outline-variant/40 opacity-40 cursor-not-allowed';
+      iconHtml = isUpNext
+        ? `<span class="material-symbols-outlined text-primary prayer-icon">schedule</span>`
+        : `<span class="material-symbols-outlined text-on-surface-variant prayer-icon">lock</span>`;
+      labelClass = isUpNext ? 'text-primary font-bold' : 'text-on-surface-variant';
+      clickAttr = `onclick="showToast('${p} time hasn\\'t started yet', 'lock')"`;
+    } else if (isMissed) {
+      // Started but >90 min ago — missed, offer qaza/offered choice
       circleClass = 'bg-error-container border-2 border-error/30 cursor-pointer hover:scale-110 transition-transform';
       iconHtml = `<span class="material-symbols-outlined text-error prayer-icon">warning</span>`;
       labelClass = 'text-error';
       clickAttr = `onclick="openQazaModal('${p}')"`;
     } else {
-      // Future / locked
-      circleClass = 'bg-surface-container border-2 border-outline-variant/40 opacity-40 cursor-not-allowed';
-      iconHtml = `<span class="material-symbols-outlined text-on-surface-variant prayer-icon">lock</span>`;
-      labelClass = 'text-on-surface-variant';
-      clickAttr = '';
+      // Current window — time started, within 90 min, log directly
+      circleClass = 'bg-primary-fixed border-2 border-primary/30 cursor-pointer hover:scale-110 transition-transform shadow-sm';
+      iconHtml = `<span class="material-symbols-outlined text-primary prayer-icon">radio_button_unchecked</span>`;
+      labelClass = 'text-primary font-bold';
+      clickAttr = `onclick="quickLogPrayer('${p}')"`;
     }
 
     return `
@@ -881,17 +895,17 @@ function renderFullSchedule() {
 
   container.innerHTML = PRAYERS.map(p => {
     const done = state.todayLogs[p];
-    const isNext = p === next.name;
     const pMin = prayerTimesMinutes[p] || 0;
-    const isPast = pMin < nowMin && !done && !isNext;
-    const isFuture = pMin > nowMin && !isNext && !done;
+    const hasStarted = nowMin >= pMin;
+    const isNext = p === next.name;
+    const isMissed = hasStarted && !done && (nowMin - pMin) > 90;
+    const isCurrent = hasStarted && !done && (nowMin - pMin) <= 90;
 
     let bg = '';
     if (done) bg = 'bg-primary-container/10';
-    else if (isNext) bg = 'bg-secondary-fixed/20';
+    else if (isCurrent) bg = 'bg-secondary-fixed/20';
 
     const pts = done ? `<span class="pts-badge">+10 pts</span>` : '';
-
     let status, rowClick, rowStyle;
 
     if (done) {
@@ -901,19 +915,22 @@ function renderFullSchedule() {
         : `<span class="material-symbols-outlined text-on-secondary-container text-[20px]" style="font-variation-settings:'FILL' 1;">check_circle</span>`;
       rowClick = `onclick="showToast('${p} already logged${isQaza ? ' (Qaza)' : ''} ✓', 'check_circle')"`;
       rowStyle = 'cursor-default';
-    } else if (isNext) {
-      status = `<span class="text-label-sm font-label-sm text-primary bg-primary-fixed/60 px-3 py-1 rounded-full font-bold">Up Next</span>`;
-      rowClick = `onclick="quickLogPrayer('${p}')"`;
-      rowStyle = 'cursor-pointer hover:bg-surface-container-low';
-    } else if (isPast) {
+    } else if (!hasStarted) {
+      // Future — fully blocked
+      status = isNext
+        ? `<span class="text-label-sm font-label-sm text-primary bg-primary-fixed/60 px-3 py-1 rounded-full">Up Next</span>`
+        : `<span class="text-label-sm font-label-sm text-on-surface-variant/50">${formatTime12(state.prayerTimes[p])}</span>`;
+      rowClick = '';
+      rowStyle = 'cursor-not-allowed opacity-50';
+    } else if (isMissed) {
       status = `<span class="text-label-sm font-label-sm text-error bg-error-container px-3 py-1 rounded-full">Missed</span>`;
       rowClick = `onclick="quickLogPrayer('${p}')"`;
       rowStyle = 'cursor-pointer hover:bg-surface-container-low';
     } else {
-      // Future — blocked entirely
-      status = `<span class="text-label-sm font-label-sm text-on-surface-variant/50">${formatTime12(state.prayerTimes[p])}</span>`;
-      rowClick = '';
-      rowStyle = 'cursor-not-allowed opacity-50';
+      // Current window
+      status = `<span class="text-label-sm font-label-sm text-primary bg-primary-fixed/60 px-3 py-1 rounded-full font-bold">Pray now</span>`;
+      rowClick = `onclick="quickLogPrayer('${p}')"`;
+      rowStyle = 'cursor-pointer hover:bg-surface-container-low';
     }
 
     return `
@@ -1107,22 +1124,24 @@ function quickLogPrayer(prayerName) {
     showToast(`${prayerName} already logged`, 'check_circle');
     return;
   }
-  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
-  const next = getNextPrayer();
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
   const pMin = prayerTimesMinutes[prayerName] || 0;
-  const isPast = pMin < nowMin && prayerName !== next.name;
-  const isFuture = pMin > nowMin && prayerName !== next.name;
 
-  if (isFuture) {
-    showToast(`${prayerName} hasn't started yet`, 'lock');
+  if (nowMin < pMin) {
+    // Time hasn't started yet — hard block
+    showToast(`${prayerName} time hasn't started yet`, 'lock');
     return;
   }
-  if (isPast) {
+
+  const currentPrayerMin = nowMin - pMin;
+  // If within a reasonable window (e.g. prayer started within last 90 min), log directly
+  // If well past (more than 90 min ago), show the offered/qaza choice
+  if (currentPrayerMin > 90) {
     openQazaModal(prayerName);
-    return;
+  } else {
+    logPrayer(prayerName);
   }
-  // It's the next prayer — log directly
-  logPrayer(prayerName);
 }
 
 // =============================================
