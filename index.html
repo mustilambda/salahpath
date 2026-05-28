@@ -821,34 +821,32 @@ function renderPrayerCircles() {
 
     if (done) {
       const isQaza = done === 'qaza';
-      // Completed — show green for on-time, amber for qaza
       circleClass = isQaza
         ? 'bg-secondary-fixed border-2 border-secondary/30 shadow-sm cursor-default'
         : 'bg-secondary-container border-2 border-secondary/20 shadow-sm cursor-default';
       iconHtml = `<span class="material-symbols-outlined ${isQaza ? 'text-secondary' : 'text-on-secondary-container'} prayer-icon" style="font-variation-settings:'FILL' 1;">${isQaza ? 'update' : 'check_circle'}</span>`;
       labelClass = isQaza ? 'text-secondary' : 'text-on-surface-variant';
       clickAttr = `onclick="showToast('${p} already logged${isQaza ? ' (Qaza)' : ''} ✓', 'check_circle')"`;
-      // Next up — fully clickable, log directly
+    } else if (isNext) {
       circleClass = 'bg-surface-container-high border-2 border-dashed border-primary animate-pulse-soft cursor-pointer hover:scale-110 transition-transform';
       iconHtml = `<span class="material-symbols-outlined text-primary prayer-icon">radio_button_unchecked</span>`;
       labelClass = 'text-primary font-bold';
       clickAttr = `onclick="quickLogPrayer('${p}')"`;
     } else if (isPast) {
-      // Missed — clickable but shows Qaza warning
       circleClass = 'bg-error-container border-2 border-error/30 cursor-pointer hover:scale-110 transition-transform';
       iconHtml = `<span class="material-symbols-outlined text-error prayer-icon">warning</span>`;
       labelClass = 'text-error';
       clickAttr = `onclick="openQazaModal('${p}')"`;
     } else {
-      // Future / locked — NOT clickable
-      circleClass = 'bg-surface-container border-2 border-surface-container-high opacity-40 cursor-not-allowed';
+      // Future / locked
+      circleClass = 'bg-surface-container border-2 border-outline-variant/40 opacity-40 cursor-not-allowed';
       iconHtml = `<span class="material-symbols-outlined text-on-surface-variant prayer-icon">lock</span>`;
       labelClass = 'text-on-surface-variant';
       clickAttr = '';
     }
 
     return `
-      <div class="flex flex-col items-center gap-3 group" ${clickAttr}>
+      <div class="flex flex-col items-center gap-3" ${clickAttr}>
         <div class="w-14 h-14 rounded-full ${circleClass} flex items-center justify-center" id="circle-${p}">
           ${iconHtml}
         </div>
@@ -886,33 +884,40 @@ function renderFullSchedule() {
     const isNext = p === next.name;
     const pMin = prayerTimesMinutes[p] || 0;
     const isPast = pMin < nowMin && !done && !isNext;
-    const isFuture = pMin > nowMin && !isNext;
+    const isFuture = pMin > nowMin && !isNext && !done;
 
-    const bg = done ? 'bg-primary-container/10' : isNext ? 'bg-secondary-fixed/20' : '';
+    let bg = '';
+    if (done) bg = 'bg-primary-container/10';
+    else if (isNext) bg = 'bg-secondary-fixed/20';
+
     const pts = done ? `<span class="pts-badge">+10 pts</span>` : '';
 
-    let status, rowClick;
+    let status, rowClick, rowStyle;
+
     if (done) {
       const isQaza = done === 'qaza';
       status = isQaza
         ? `<span class="text-label-sm font-label-sm text-secondary bg-secondary-fixed/40 px-3 py-1 rounded-full">Qaza ✓</span>`
         : `<span class="material-symbols-outlined text-on-secondary-container text-[20px]" style="font-variation-settings:'FILL' 1;">check_circle</span>`;
       rowClick = `onclick="showToast('${p} already logged${isQaza ? ' (Qaza)' : ''} ✓', 'check_circle')"`;
+      rowStyle = 'cursor-default';
     } else if (isNext) {
-      status = `<span class="text-label-sm font-label-sm text-secondary bg-secondary-fixed/40 px-3 py-1 rounded-full">Up Next</span>`;
+      status = `<span class="text-label-sm font-label-sm text-primary bg-primary-fixed/60 px-3 py-1 rounded-full font-bold">Up Next</span>`;
       rowClick = `onclick="quickLogPrayer('${p}')"`;
+      rowStyle = 'cursor-pointer hover:bg-surface-container-low';
     } else if (isPast) {
       status = `<span class="text-label-sm font-label-sm text-error bg-error-container px-3 py-1 rounded-full">Missed</span>`;
-      rowClick = `onclick="openQazaModal('${p}')"`;
+      rowClick = `onclick="quickLogPrayer('${p}')"`;
+      rowStyle = 'cursor-pointer hover:bg-surface-container-low';
     } else {
-      status = `<span class="text-label-sm font-label-sm text-on-surface-variant">${formatTime12(state.prayerTimes[p])}</span>`;
-      rowClick = ''; // future — not clickable
+      // Future — blocked entirely
+      status = `<span class="text-label-sm font-label-sm text-on-surface-variant/50">${formatTime12(state.prayerTimes[p])}</span>`;
+      rowClick = '';
+      rowStyle = 'cursor-not-allowed opacity-50';
     }
 
-    const cursor = isFuture && !done ? 'cursor-not-allowed opacity-60' : 'cursor-pointer';
-
     return `
-      <div class="flex items-center justify-between px-8 py-4 transition-colors ${bg} ${cursor} ${!isFuture ? 'hover:bg-surface-container-low' : ''}" ${rowClick}>
+      <div class="flex items-center justify-between px-8 py-4 transition-colors ${bg} ${rowStyle}" ${rowClick}>
         <div class="flex items-center gap-4">
           <div class="w-10 h-10 rounded-full ${PRAYER_ICON_BG[p]} flex items-center justify-center">
             <span class="material-symbols-outlined ${PRAYER_ICON_COLOR[p]} text-[18px]">${PRAYER_ICONS[p]}</span>
@@ -1158,7 +1163,11 @@ function logPrayerQaza(prayerName) {
 }
 
 function updateStreak() {
-  // Streak is maintained per-day in checkDayReset; this recalculates if needed
+  const loggedToday = Object.values(state.todayLogs).filter(v => v).length;
+  // First prayer of the day kicks the streak to at least 1
+  if (loggedToday === 1 && state.streak === 0) {
+    state.streak = 1;
+  }
   saveState(state);
 }
 
@@ -1373,13 +1382,14 @@ function checkDayReset() {
   const lastDay = state.lastDay || '';
   if (lastDay !== today) {
     if (lastDay) {
+      const anyDoneYesterday = Object.values(state.todayLogs || {}).some(v => v);
       const allDoneYesterday = PRAYERS.every(p => (state.todayLogs || {})[p]);
-      if (allDoneYesterday) {
-        state.streak = (state.streak || 0) + 1;
-      } else {
-        const anyDone = Object.values(state.todayLogs || {}).some(v => v);
-        if (!anyDone) state.streak = 0;
+      if (!anyDoneYesterday) {
+        state.streak = 0; // No prayers at all yesterday — reset
+      } else if (allDoneYesterday) {
+        state.streak = (state.streak || 1) + 1; // Perfect day — increment
       }
+      // Partial day — keep current streak, don't reset
     }
     state.todayLogs = {};
     state.lastDay = today;
