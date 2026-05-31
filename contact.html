@@ -187,7 +187,7 @@
           <label for="message">Message *</label>
           <textarea id="message" placeholder="Describe your question or feedback…" required></textarea>
         </div>
-        <button type="submit" class="submit-btn">
+        <button type="submit" class="submit-btn" id="submit-btn">
           <span>✉️</span> Send Message
         </button>
         <div class="success-msg" id="success-msg">
@@ -275,12 +275,46 @@
     el.parentElement.classList.toggle('open');
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    // In a real setup you'd send to a backend or Formspree here
-    document.getElementById('success-msg').classList.add('show');
-    document.getElementById('contact-form').reset();
-    setTimeout(() => document.getElementById('success-msg').classList.remove('show'), 6000);
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = 'Sending…';
+    btn.disabled = true;
+
+    const data = {
+      access_key: '059dbb36-4486-441f-a802-47c8b1ba5da1',
+      name: (document.getElementById('fname').value + ' ' + document.getElementById('lname').value).trim(),
+      email: document.getElementById('email').value,
+      subject: 'SalahPath Enquiry: ' + (document.getElementById('subject').value || 'General'),
+      message: document.getElementById('message').value
+    };
+
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      if (json.success) {
+        document.getElementById('success-msg').classList.add('show');
+        document.getElementById('contact-form').reset();
+        btn.textContent = 'Sent ✓';
+        setTimeout(() => {
+          document.getElementById('success-msg').classList.remove('show');
+          btn.textContent = '✉️ Send Message';
+          btn.disabled = false;
+        }, 6000);
+      } else {
+        alert('Something went wrong. Please contact us via WhatsApp or email directly.');
+        btn.textContent = '✉️ Send Message';
+        btn.disabled = false;
+      }
+    } catch (err) {
+      alert('Network error. Please contact us via WhatsApp or email directly.');
+      btn.textContent = '✉️ Send Message';
+      btn.disabled = false;
+    }
   }
 </script>
 </body>
