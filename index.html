@@ -617,11 +617,55 @@ function renderDashboard() {
 }
 
 function handlePrayerPress(p) {
-  if (state.todayLogs[p]) { showToast(`${p} already logged ✓`); return; }
+  if (state.todayLogs[p]) { openUndoModal(p); return; }
   const nowMin = new Date().getHours()*60 + new Date().getMinutes();
   const pMin = prayerTimesMinutes[p] || 0;
   if (nowMin < pMin) { showToast(`${p} time hasn't started yet`); return; }
   nowMin - pMin > 90 ? openQazaModal(p) : logPrayer(p);
+}
+
+function openUndoModal(prayer) {
+  const label = state.todayLogs[prayer] === 'qaza' ? `${prayer} (Qaza) ✓` : `${prayer} ✓ Logged`;
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">${label}</div>
+    <div class="modal-body">Do you want to undo this log? Your points and prayer count will be adjusted.</div>
+    <button class="modal-btn primary" onclick="unlogPrayer('${prayer}'); closeModal()">↩ Undo Log</button>
+    <button class="modal-btn ghost" onclick="closeModal()">Keep It</button>
+  `;
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+
+function unlogPrayer(name) {
+  if (!state.todayLogs[name]) return;
+  const wasQaza = state.todayLogs[name] === 'qaza';
+  const wasAllDone = PRAYERS.every(p => state.todayLogs[p] === true);
+
+  const newLogs = { ...state.todayLogs };
+  delete newLogs[name];
+
+  let pointsToDeduct = 10;
+  let perfectDays = state.perfectDays;
+  let actLog = [...(state.activityLog || [])];
+
+  if (wasAllDone) {
+    pointsToDeduct += 25;
+    perfectDays = Math.max(0, perfectDays - 1);
+    const i = actLog.findLastIndex(l => l.label === 'All 5 prayers completed 🎉');
+    if (i !== -1) actLog.splice(i, 1);
+  }
+  const pLabel = wasQaza ? `${name} logged as Qaza` : `${name} prayer logged`;
+  const j = actLog.findLastIndex(l => l.label === pLabel);
+  if (j !== -1) actLog.splice(j, 1);
+
+  const remainingCount = Object.values(newLogs).filter(v => v).length;
+  let streak = state.streak;
+  if (remainingCount === 0 && streak === 1) streak = 0;
+
+  state = { ...state, todayLogs: newLogs, totalPrayers: Math.max(0, state.totalPrayers - 1), points: Math.max(0, state.points - pointsToDeduct), perfectDays, activityLog: actLog, streak };
+  saveState(state);
+  scheduleNotifications();
+  renderAll();
+  showToast(`${name} log removed ↩`);
 }
 
 function startCountdown() {
@@ -681,7 +725,12 @@ function renderSettings() {
         <div class="setting-row">
           <div class="setting-info">
             <div class="setting-name-text">Prayer Reminders (5-tier)</div>
-            <div class="setting-sub-text">${notifSupported ? 'Works while the app is open' : 'Not supported in this browser'}</div>
+            <div class="setting-sub-text">${
+              !notifSupported ? 'Not supported in this browser'
+              : Notification.permission === 'granted' && state.notifEnabled ? '🟢 Active — notifications are scheduled'
+              : Notification.permission === 'denied' ? '🔴 Blocked — allow in browser site settings'
+              : 'Works while the app is open on Android Chrome'
+            }</div>
           </div>
           ${notifSupported ? `
             <label class="toggle-switch">
@@ -697,7 +746,6 @@ function renderSettings() {
       <div class="card">
         <div class="card-label">🗂️ Data & Reset</div>
         <button class="danger-btn" onclick="resetToday()">↺ Reset Today's Logs</button>
-        <button class="danger-btn red" onclick="clearAll()">🗑️ Clear All Data</button>
       </div>
     </div>
     <div class="bottom-pad"></div>
@@ -747,15 +795,20 @@ function setNotifOffset(n) {
 }
 
 function resetToday() {
-  if (!confirm("Clear today's prayer logs? Cannot be undone.")) return;
-  state = { ...state, todayLogs: {} }; saveState(state);
-  scheduleNotifications(); renderAll(); showToast("Today's logs cleared ↺");
-}
-
-function clearAll() {
-  if (!confirm('Reset all data including streak and rewards? Cannot be undone.')) return;
-  state = { ...state, todayLogs:{}, streak:0, lastDay:'', totalPrayers:0, points:0, perfectDays:0, activityLog:[], earnedBadges:[] };
-  saveState(state); scheduleNotifications(); renderAll(); showToast('All data cleared 🗑️');
+  if (!confirm("Clear today's prayer logs? Points and prayer count for today will also be reversed.")) return;
+  const loggedPrayers = PRAYERS.filter(p => state.todayLogs[p]);
+  const wasAllDone = PRAYERS.every(p => state.todayLogs[p] === true);
+  const pointsToDeduct = loggedPrayers.length * 10 + (wasAllDone ? 25 : 0);
+  state = {
+    ...state,
+    todayLogs: {},
+    totalPrayers: Math.max(0, state.totalPrayers - loggedPrayers.length),
+    points: Math.max(0, state.points - pointsToDeduct),
+    perfectDays: wasAllDone ? Math.max(0, state.perfectDays - 1) : state.perfectDays,
+    streak: loggedPrayers.length > 0 && state.streak <= 1 ? 0 : state.streak,
+    activityLog: [],
+  };
+  saveState(state); scheduleNotifications(); renderAll(); showToast("Today's logs cleared ↺");
 }
 
 // ── Render: Rewards ───────────────────────────────────────────────────────────
