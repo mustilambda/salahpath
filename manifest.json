@@ -1,17 +1,23 @@
 {
-  "name": "SalahPath — Stay Devoted",
+  "name": "SalahPath",
   "short_name": "SalahPath",
-  "description": "Track your daily prayers, earn rewards, and stay devoted.",
-  "start_url": "/",
+  "description": "Your daily prayer companion",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f8f9fa",
+  "orientation": "portrait",
+  "background_color": "#003527",
   "theme_color": "#003527",
-  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='32' fill='%23003527'/><text y='130' x='96' text-anchor='middle' font-size='120' fill='%2395d3ba'>🕌</text></svg>",
+      "src": "icons/icon-192.png.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
