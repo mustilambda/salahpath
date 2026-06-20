@@ -1,926 +1,286 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SalahPath</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#003527" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="SalahPath" />
-  <style>
-    :root {
-      --primary: #003527;
-      --primary-container: #064e3b;
-      --primary-fixed: #b0f0d6;
-      --on-primary: #ffffff;
-      --on-primary-container: #80bea6;
-      --secondary: #904d00;
-      --secondary-container: #fe932c;
-      --secondary-fixed: #ffdcc3;
-      --on-secondary-container: #663500;
-      --surface: #f8f9fa;
-      --surface-container: #edeeef;
-      --surface-container-low: #f3f4f5;
-      --surface-container-high: #e7e8e9;
-      --on-surface: #191c1d;
-      --on-surface-variant: #404944;
-      --outline-variant: #bfc9c3;
-      --error: #ba1a1a;
-      --error-container: #ffdad6;
-      --white: #ffffff;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--surface); color: var(--on-surface); overflow: hidden; }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="SalahPath — A beautifully designed Salah reminder and tracker. Stay devoted, track your prayers, earn rewards. Available on Android."/>
+<meta name="theme-color" content="#003527"/>
+<title>SalahPath — Stay Devoted</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #003527;
+    --primary-light: #064e3b;
+    --primary-fixed: #b0f0d6;
+    --secondary: #904d00;
+    --secondary-container: #fe932c;
+    --secondary-fixed: #ffdcc3;
+    --surface: #f8f9fa;
+    --white: #ffffff;
+    --on-surface: #191c1d;
+    --on-surface-variant: #404944;
+    --outline: #bfc9c3;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: var(--white); color: var(--on-surface); }
 
-    /* ── Layout ── */
-    #app { display: flex; flex-direction: column; height: 100dvh; max-width: 480px; margin: 0 auto; position: relative; }
-    .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
-    .screen.active { display: flex; }
-    .screen-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; padding-top: max(14px, calc(env(safe-area-inset-top) + 10px)); background: var(--surface); border-bottom: 1px solid var(--outline-variant); flex-shrink: 0; }
-    .app-title { font-size: 22px; font-weight: 700; color: var(--primary); font-family: Georgia, serif; }
-    .screen-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  /* NAV */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--outline); }
+  .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--primary); text-decoration: none; }
+  .nav-links { display: flex; align-items: center; gap: 32px; }
+  .nav-links a { font-size: 14px; font-weight: 600; color: var(--on-surface-variant); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+  .nav-cta { background: var(--primary); color: var(--white) !important; padding: 10px 20px; border-radius: 999px; }
+  .nav-cta:hover { background: var(--primary-light) !important; opacity: 1; }
+  .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 4px; }
+  .nav-hamburger span { display: block; width: 22px; height: 2px; background: var(--primary); border-radius: 2px; }
+  .mobile-menu { display: none; flex-direction: column; gap: 0; background: var(--white); border-bottom: 1px solid var(--outline); padding: 8px 0; }
+  .mobile-menu a { padding: 14px 24px; font-size: 15px; font-weight: 600; color: var(--on-surface-variant); text-decoration: none; }
+  .mobile-menu a.active, .mobile-menu a:hover { color: var(--primary); background: var(--surface); }
+  .mobile-menu.open { display: flex; }
 
-    /* ── Bottom Nav ── */
-    .bottom-nav { display: flex; background: var(--white); border-top: 1px solid var(--outline-variant); padding-bottom: env(safe-area-inset-bottom); flex-shrink: 0; }
-    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 0; border: none; background: none; cursor: pointer; gap: 3px; color: #707974; transition: color 0.15s; }
-    .nav-btn.active { color: var(--primary); }
-    .nav-btn-icon { font-size: 22px; }
-    .nav-btn-label { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; }
+  /* HERO */
+  .hero { padding: 120px 24px 80px; background: linear-gradient(160deg, #003527 0%, #064e3b 60%, #0a5c45 100%); color: var(--white); text-align: center; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 70% 50%, rgba(176,240,214,0.08) 0%, transparent 60%); pointer-events: none; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 600; margin-bottom: 28px; letter-spacing: 0.05em; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px, 6vw, 72px); font-weight: 700; line-height: 1.1; margin-bottom: 24px; }
+  .hero h1 span { color: var(--secondary-container); }
+  .hero p { font-size: clamp(16px, 2vw, 20px); color: rgba(255,255,255,0.75); max-width: 580px; margin: 0 auto 40px; line-height: 1.7; }
+  .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary { background: var(--secondary-container); color: #3a1f00; font-weight: 700; font-size: 15px; padding: 14px 28px; border-radius: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 20px rgba(254,147,44,0.4); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(254,147,44,0.5); }
+  .btn-outline { background: rgba(255,255,255,0.1); color: var(--white); font-weight: 600; font-size: 15px; padding: 14px 28px; border-radius: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.25); transition: background 0.2s; }
+  .btn-outline:hover { background: rgba(255,255,255,0.18); }
+  .hero-stats { display: flex; justify-content: center; gap: 48px; margin-top: 64px; flex-wrap: wrap; }
+  .hero-stat { text-align: center; }
+  .hero-stat-num { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--primary-fixed); }
+  .hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.55); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
 
-    /* ── Cards ── */
-    .card { background: var(--white); border-radius: 20px; padding: 20px; margin: 0 16px 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-    .card-title { font-size: 18px; font-weight: 700; color: var(--primary); font-family: Georgia, serif; margin-bottom: 16px; }
+  /* FEATURES */
+  .section { padding: 80px 24px; }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+  .section-tag { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--secondary); background: var(--secondary-fixed); padding: 6px 14px; border-radius: 999px; margin-bottom: 16px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: clamp(28px, 4vw, 44px); font-weight: 700; color: var(--primary); margin-bottom: 16px; }
+  .section-sub { font-size: 17px; color: var(--on-surface-variant); max-width: 560px; line-height: 1.7; }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 56px; }
+  .feature-card { background: var(--white); border: 1px solid var(--outline); border-radius: 20px; padding: 32px; transition: box-shadow 0.2s, transform 0.2s; }
+  .feature-card:hover { box-shadow: 0 8px 32px rgba(0,53,39,0.1); transform: translateY(-4px); }
+  .feature-icon { width: 52px; height: 52px; border-radius: 14px; background: var(--primary-fixed); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 20px; }
+  .feature-title { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 10px; }
+  .feature-desc { font-size: 14px; color: var(--on-surface-variant); line-height: 1.7; }
 
-    /* ── Hero ── */
-    .hero-card { background: var(--primary-container); border-radius: 20px; padding: 24px; margin: 16px; }
-    .hero-label { font-size: 11px; font-weight: 700; color: #80bea6; letter-spacing: 2px; margin-bottom: 4px; }
-    .hero-name { font-size: 38px; font-weight: 700; color: #fff; font-family: Georgia, serif; }
-    .hero-time { font-size: 18px; font-weight: 600; color: var(--primary-fixed); margin-bottom: 16px; }
-    .countdown-box { background: rgba(255,255,255,0.12); border-radius: 16px; padding: 16px; text-align: center; }
-    .countdown-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 2px; margin-bottom: 4px; }
-    #countdown-display { font-size: 32px; font-weight: 700; color: var(--secondary-container); font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
-    .location-text { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 6px; }
+  /* HOW IT WORKS */
+  .hiw { background: var(--surface); }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; margin-top: 56px; }
+  .step { text-align: center; }
+  .step-num { width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: var(--white); font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+  .step-title { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+  .step-desc { font-size: 14px; color: var(--on-surface-variant); line-height: 1.6; }
+  .step-connector { display: none; }
 
-    /* ── Prayer circles ── */
-    .circles-row { display: flex; justify-content: space-between; margin-bottom: 20px; }
-    .circle-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; user-select: none; }
-    .circle { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--outline-variant); display: flex; align-items: center; justify-content: center; font-size: 22px; background: var(--surface-container); transition: transform 0.1s; }
-    .circle-wrap:active .circle { transform: scale(0.9); }
-    .circle-name { font-size: 11px; font-weight: 700; color: var(--primary); }
-    .circle-time { font-size: 9px; color: var(--on-surface-variant); }
+  /* QUOTES */
+  .quote-section { background: var(--primary); padding: 80px 24px; text-align: center; }
+  .quote-section blockquote { font-family: 'Playfair Display', serif; font-size: clamp(20px, 3vw, 32px); font-style: italic; color: var(--white); max-width: 760px; margin: 0 auto 24px; line-height: 1.6; }
+  .quote-section cite { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.6); letter-spacing: 0.05em; }
 
-    /* ── Devotion header ── */
-    .devotion-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-    .done-count { font-size: 24px; font-weight: 700; color: var(--secondary); }
-    .done-label { font-size: 10px; font-weight: 600; color: var(--on-surface-variant); letter-spacing: 1px; }
+  /* DOWNLOAD CTA */
+  .download-cta { background: linear-gradient(135deg, #003527, #0a5c45); padding: 80px 24px; text-align: center; }
+  .download-cta h2 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 4vw, 44px); color: var(--white); margin-bottom: 16px; }
+  .download-cta p { font-size: 17px; color: rgba(255,255,255,0.7); margin-bottom: 36px; }
 
-    /* ── Streak ── */
-    .streak-box { display: flex; align-items: center; gap: 12px; background: var(--surface-container-low); border-radius: 12px; padding: 14px; }
-    .streak-fire { font-size: 28px; }
-    .streak-text { font-size: 13px; font-weight: 600; color: var(--primary); }
-    .streak-num { color: var(--secondary); }
-    .streak-sub { font-size: 11px; color: var(--on-surface-variant); margin-top: 2px; }
+  /* FOOTER */
+  footer { background: #011a13; padding: 48px 24px 32px; }
+  .footer-inner { max-width: 1100px; margin: 0 auto; }
+  .footer-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 32px; margin-bottom: 40px; }
+  .footer-brand p { font-size: 14px; color: rgba(255,255,255,0.4); margin-top: 10px; max-width: 260px; line-height: 1.6; }
+  .footer-logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--primary-fixed); }
+  .footer-links h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); margin-bottom: 16px; }
+  .footer-links ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-links a { font-size: 14px; color: rgba(255,255,255,0.65); text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--white); }
+  .footer-bottom { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .footer-bottom p { font-size: 13px; color: rgba(255,255,255,0.3); }
 
-    /* ── Quote ── */
-    .quote-card { background: var(--white); border-radius: 20px; padding: 24px; margin: 0 16px 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-left: 4px solid var(--secondary-container); }
-    .quote-icon { font-size: 32px; color: var(--secondary); margin-bottom: 8px; }
-    .quote-text { font-size: 15px; font-style: italic; color: var(--primary); line-height: 24px; font-family: Georgia, serif; margin-bottom: 16px; }
-    .quote-line { height: 1px; background: var(--outline-variant); width: 40px; margin-bottom: 12px; }
-    .quote-attr { font-size: 12px; font-weight: 600; color: var(--on-surface-variant); }
-
-    /* ── Schedule list ── */
-    .schedule-card { padding: 0; overflow: hidden; }
-    .schedule-card-title { font-size: 18px; font-weight: 700; color: var(--primary); font-family: Georgia, serif; padding: 20px 20px 0; }
-    .schedule-row { display: flex; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(191,201,195,0.25); gap: 14px; cursor: pointer; transition: background 0.15s; user-select: none; }
-    .schedule-row:last-child { border-bottom: none; }
-    .schedule-row:active { background: var(--surface-container-low); }
-    .schedule-icon-wrap { width: 40px; height: 40px; border-radius: 50%; background: var(--surface-container-low); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-    .schedule-info { flex: 1; }
-    .schedule-name { font-size: 14px; font-weight: 600; color: var(--on-surface); }
-    .schedule-sub { font-size: 11px; color: var(--on-surface-variant); margin-top: 1px; }
-    .status-badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
-
-    /* ── Settings ── */
-    .settings-section { padding: 16px 16px 0; }
-    .section-title { font-size: 20px; font-weight: 700; color: var(--primary); font-family: Georgia, serif; margin-bottom: 4px; }
-    .section-sub { font-size: 13px; color: var(--on-surface-variant); margin-bottom: 12px; }
-    .card-label { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 14px; }
-    .field-label { font-size: 12px; font-weight: 600; color: var(--on-surface-variant); margin-bottom: 8px; letter-spacing: 0.5px; }
-    .toggle-row { display: flex; gap: 10px; margin-bottom: 16px; }
-    .mode-btn { flex: 1; padding: 10px; border-radius: 999px; border: 2px solid var(--outline-variant); background: none; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--on-surface-variant); transition: all 0.15s; }
-    .mode-btn.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
-    .method-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-    .method-btn { padding: 10px 14px; border-radius: 12px; border: 1px solid var(--outline-variant); background: none; cursor: pointer; font-size: 13px; color: var(--on-surface-variant); text-align: left; transition: all 0.15s; }
-    .method-btn.active { background: var(--primary-fixed); border-color: var(--primary); color: var(--primary); font-weight: 700; }
-    .location-info { font-size: 12px; color: var(--on-surface-variant); text-align: center; margin-top: 4px; margin-bottom: 4px; }
-    .prayer-row { display: flex; align-items: center; padding: 12px 0; border-top: 1px solid rgba(191,201,195,0.25); gap: 12px; }
-    .prayer-emoji { font-size: 22px; }
-    .prayer-name-text { font-size: 14px; font-weight: 600; color: var(--on-surface); }
-    .prayer-sub-text { font-size: 11px; color: var(--on-surface-variant); }
-    .prayer-time-text { font-size: 14px; font-weight: 700; color: var(--primary); }
-    input[type="time"] { font-size: 14px; padding: 6px 10px; border: 1px solid var(--outline-variant); border-radius: 10px; color: var(--on-surface); background: var(--surface-container-low); width: 110px; }
-    .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    .setting-info { flex: 1; }
-    .setting-name-text { font-size: 14px; font-weight: 600; color: var(--on-surface); }
-    .setting-sub-text { font-size: 11px; color: var(--on-surface-variant); }
-    .toggle-switch { position: relative; width: 50px; height: 28px; flex-shrink: 0; cursor: pointer; }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider { position: absolute; inset: 0; background: var(--outline-variant); border-radius: 34px; transition: background 0.2s; }
-    .toggle-slider::before { content: ''; position: absolute; height: 20px; width: 20px; left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
-    .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
-    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
-    .offset-row { display: flex; gap: 8px; flex-wrap: wrap; }
-    .offset-btn { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--outline-variant); background: none; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--on-surface-variant); transition: all 0.15s; }
-    .offset-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
-    .danger-btn { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--outline-variant); background: none; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--on-surface-variant); margin-top: 10px; }
-    .danger-btn:active { background: var(--surface-container); }
-    .danger-btn.red { border-color: rgba(186,26,26,0.4); color: var(--error); }
-
-    /* ── Rewards ── */
-    .stats-row { display: flex; gap: 10px; padding: 0 16px; margin-bottom: 16px; }
-    .stat-card { flex: 1; background: var(--white); border-radius: 16px; padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .stat-num { font-size: 32px; font-weight: 700; color: var(--primary); }
-    .stat-label { font-size: 9px; font-weight: 700; color: var(--on-surface-variant); letter-spacing: 1px; margin-top: 4px; }
-    .badges-grid { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; }
-    .badge-item { width: calc(25% - 12px); display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .badge-item.locked { opacity: 0.4; }
-    .badge-circle { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; }
-    .badge-circle.earned { background: var(--primary-fixed); }
-    .badge-circle.locked-c { background: var(--surface-container); border: 2px dashed var(--outline-variant); }
-    .badge-label { font-size: 11px; font-weight: 700; color: var(--on-surface); text-align: center; }
-    .badge-sub { font-size: 9px; color: var(--on-surface-variant); text-align: center; }
-    .log-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(191,201,195,0.2); }
-    .log-item:last-child { border-bottom: none; }
-    .log-icon-wrap { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-    .log-info { flex: 1; }
-    .log-label { font-size: 13px; font-weight: 600; color: var(--on-surface); }
-    .log-time-text { font-size: 11px; color: var(--on-surface-variant); margin-top: 1px; }
-    .pts-badge { background: var(--secondary-fixed); padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--on-secondary-container); white-space: nowrap; }
-    .empty-text { text-align: center; color: var(--on-surface-variant); padding: 24px 0; font-size: 14px; }
-
-    /* ── Toast ── */
-    #toast { position: fixed; bottom: calc(70px + env(safe-area-inset-bottom) + 8px); left: 50%; transform: translateX(-50%); background: rgba(0,53,39,0.95); color: white; padding: 10px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; white-space: nowrap; z-index: 1000; opacity: 0; transition: opacity 0.2s; pointer-events: none; max-width: 90vw; }
-    #toast.visible { opacity: 1; }
-
-    /* ── Modal ── */
-    #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: flex-end; justify-content: center; }
-    #modal-overlay.visible { display: flex; }
-    .modal-sheet { background: var(--white); border-radius: 20px 20px 0 0; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); width: 100%; max-width: 480px; }
-    .modal-title { font-size: 20px; font-weight: 700; color: var(--primary); font-family: Georgia, serif; margin-bottom: 8px; }
-    .modal-body { font-size: 14px; color: var(--on-surface-variant); line-height: 22px; margin-bottom: 20px; }
-    .modal-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; cursor: pointer; font-size: 15px; font-weight: 600; margin-bottom: 10px; transition: opacity 0.15s; }
-    .modal-btn:active { opacity: 0.8; }
-    .modal-btn.primary { background: var(--primary); color: white; }
-    .modal-btn.secondary { background: var(--secondary-container); color: var(--on-secondary-container); }
-    .modal-btn.ghost { background: none; border: 1px solid var(--outline-variant); color: var(--on-surface-variant); }
-
-    /* ── Loading ── */
-    #loading { position: fixed; inset: 0; background: var(--primary); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; color: white; transition: opacity 0.4s; }
-    #loading.hidden { opacity: 0; pointer-events: none; }
-    .loading-title { font-size: 40px; font-weight: 700; font-family: Georgia, serif; margin-bottom: 8px; }
-    .loading-sub { font-size: 14px; opacity: 0.7; }
-    .loading-dots::after { content: ''; animation: dots 1.5s steps(3,end) infinite; }
-    @keyframes dots { 0%,20%{content:'.'} 40%,60%{content:'..'} 80%,100%{content:'...'} }
-
-    .top-pad { padding-top: 16px; }
-    .bottom-pad { height: 20px; }
-    .manual-badge { font-size: 10px; background: var(--secondary-fixed); padding: 2px 8px; border-radius: 999px; color: var(--on-secondary-container); margin-left: 8px; font-weight: 700; }
-  </style>
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .nav-hamburger { display: flex; }
+    .hero-stats { gap: 28px; }
+  }
+</style>
 </head>
 <body>
 
-<div id="loading">
-  <div class="loading-title">SalahPath</div>
-  <div class="loading-sub">Fetching prayer times<span class="loading-dots"></span></div>
-</div>
-
-<div id="app">
-  <!-- Dashboard -->
-  <div id="screen-dashboard" class="screen active">
-    <div class="screen-header">
-      <span class="app-title">SalahPath</span>
-      <span id="header-next" style="font-size:12px;font-weight:600;color:var(--primary)"></span>
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">SalahPath</a>
+    <div class="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="download.html">Download</a>
+      <a href="contact.html">Contact</a>
+      <a href="download.html" class="nav-cta">📲 Get the App</a>
     </div>
-    <div class="screen-content" id="dashboard-content"></div>
+    <button class="nav-hamburger" onclick="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="active">Home</a>
+    <a href="download.html">Download</a>
+    <a href="contact.html">Contact</a>
+    <a href="download.html" style="color:var(--primary);font-weight:700;">📲 Get the App</a>
+  </div>
+</nav>
 
-  <!-- Settings -->
-  <div id="screen-settings" class="screen">
-    <div class="screen-header">
-      <span class="app-title">SalahPath</span>
-      <span style="font-size:22px">⚙️</span>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🕌 Free Android App · No Account Required</div>
+  <h1>Stay Devoted.<br/><span>Never Miss a Prayer.</span></h1>
+  <p>SalahPath helps you track your daily prayers, build streaks, and stay motivated on your spiritual journey — all in one beautiful app.</p>
+  <div class="hero-btns">
+    <a href="download.html" class="btn-primary">📲 Download APK</a>
+    <a href="#features" class="btn-outline">Learn More ↓</a>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">5</div>
+      <div class="hero-stat-label">Daily Prayers</div>
     </div>
-    <div class="screen-content" id="settings-content"></div>
-  </div>
-
-  <!-- Rewards -->
-  <div id="screen-rewards" class="screen">
-    <div class="screen-header">
-      <span class="app-title">SalahPath</span>
-      <span style="font-size:22px">🏆</span>
+    <div class="hero-stat">
+      <div class="hero-stat-num">8</div>
+      <div class="hero-stat-label">Achievement Badges</div>
     </div>
-    <div class="screen-content" id="rewards-content"></div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">100%</div>
+      <div class="hero-stat-label">Free Forever</div>
+    </div>
   </div>
+</section>
 
-  <nav class="bottom-nav">
-    <button class="nav-btn active" id="nav-dashboard" onclick="navigate('dashboard')">
-      <span class="nav-btn-icon">🕌</span>
-      <span class="nav-btn-label">PRAYER</span>
-    </button>
-    <button class="nav-btn" id="nav-settings" onclick="navigate('settings')">
-      <span class="nav-btn-icon">⚙️</span>
-      <span class="nav-btn-label">SETTINGS</span>
-    </button>
-    <button class="nav-btn" id="nav-rewards" onclick="navigate('rewards')">
-      <span class="nav-btn-icon">🏆</span>
-      <span class="nav-btn-label">REWARDS</span>
-    </button>
-  </nav>
-</div>
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-inner">
+    <div class="section-tag">Features</div>
+    <h2 class="section-title">Everything you need<br/>for your Salah journey</h2>
+    <p class="section-sub">Built with love for Muslims who want to stay consistent with their prayers.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🕐</div>
+        <div class="feature-title">Auto Prayer Times</div>
+        <div class="feature-desc">Automatically fetches accurate prayer times based on your GPS location using the Aladhan API. Supports 10+ calculation methods.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔥</div>
+        <div class="feature-title">Streak Tracking</div>
+        <div class="feature-desc">Build and maintain your prayer streak day by day. Stay motivated with visual progress and milestone celebrations.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <div class="feature-title">Smart Notifications</div>
+        <div class="feature-desc">Get reminded at prayer time even when the app is closed. Set custom offsets — 5, 10, 15 or 30 minutes before each prayer.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏆</div>
+        <div class="feature-title">Rewards & Badges</div>
+        <div class="feature-desc">Earn badges and points as you log prayers. Unlock achievements like "Perfect Day", "Devoted Soul", "Golden Path" and more.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <div class="feature-title">Qaza Prayer Logging</div>
+        <div class="feature-desc">Missed a prayer? Log it as Qaza with a single tap. The app distinguishes between on-time and make-up prayers gracefully.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📖</div>
+        <div class="feature-title">Daily Inspiration</div>
+        <div class="feature-desc">A rotating collection of Quran verses and Hadith to keep you spiritually motivated throughout the day.</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<div id="toast"></div>
+<!-- HOW IT WORKS -->
+<section class="section hiw">
+  <div class="section-inner">
+    <div class="section-tag">How It Works</div>
+    <h2 class="section-title">Simple. Spiritual. Effective.</h2>
+    <p class="section-sub">Get started in seconds, no account needed.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Download the App</div>
+        <div class="step-desc">Download the APK and install it on your Android phone in under a minute.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Allow Location</div>
+        <div class="step-desc">Grant location permission once and the app automatically calculates accurate prayer times for your city.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Log Your Prayers</div>
+        <div class="step-desc">Tap a prayer to mark it done. Build your streak and earn rewards as you stay consistent.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-title">Stay Motivated</div>
+        <div class="step-desc">Get notified before each prayer, unlock badges, and track your spiritual growth over time.</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<div id="modal-overlay" onclick="if(event.target===this)closeModal()">
-  <div class="modal-sheet" id="modal-content"></div>
-</div>
+<!-- QUOTE -->
+<section class="quote-section">
+  <blockquote>"The closest a servant comes to his Lord is when he is prostrating himself, so make many supplications in it."</blockquote>
+  <cite>— Prophet Muhammad (ﷺ)</cite>
+</section>
+
+<!-- DOWNLOAD CTA -->
+<section class="download-cta">
+  <div style="max-width:600px;margin:0 auto;">
+    <h2>Ready to start your journey?</h2>
+    <p>Free to download. No account. No subscriptions. Just you and your prayers.</p>
+    <a href="download.html" class="btn-primary" style="display:inline-flex;margin:0 auto;">📲 Download for Android</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">SalahPath</div>
+        <p>A beautiful Salah tracker and prayer reminder for Muslims. Stay devoted, build your streak, earn rewards.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Pages</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="download.html">Download</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>App</h4>
+        <ul>
+          <li><a href="download.html">Download APK</a></li>
+          <li><a href="#features">Features</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 SalahPath. Made with ❤️ for the Ummah.</p>
+      <p>Free & Open Source</p>
+    </div>
+  </div>
+</footer>
 
 <script>
-// ── Constants ─────────────────────────────────────────────────────────────────
-const PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-const PRAYER_ICONS = { Fajr: '🌅', Dhuhr: '☀️', Asr: '🌤️', Maghrib: '🌇', Isha: '🌙' };
-const PRAYER_SUBTITLES = { Fajr: 'Dawn Prayer', Dhuhr: 'Midday Prayer', Asr: 'Afternoon Prayer', Maghrib: 'Sunset Prayer', Isha: 'Night Prayer' };
-
-const CALC_METHODS = [
-  { value: '1', label: 'Karachi (Pakistan)' },
-  { value: '2', label: 'ISNA (North America)' },
-  { value: '3', label: 'Muslim World League' },
-  { value: '4', label: 'Umm Al-Qura (Makkah)' },
-  { value: '5', label: 'Egyptian General Authority' },
-  { value: '7', label: 'Tehran' },
-  { value: '8', label: 'Gulf Region' },
-  { value: '12', label: 'France' },
-  { value: '13', label: 'Turkey' },
-  { value: '15', label: 'Russia' },
-];
-
-const BADGES = [
-  { id: 'first_prayer', icon: '⭐', label: 'First Step',   sub: '1st prayer logged',   req: s => s.totalPrayers >= 1 },
-  { id: 'streak_3',    icon: '🔥', label: 'First Flame',  sub: '3-day streak',         req: s => s.streak >= 3 },
-  { id: 'prayers_30',  icon: '🌟', label: 'Devotee',      sub: '30 prayers',           req: s => s.totalPrayers >= 30 },
-  { id: 'prayers_50',  icon: '🏅', label: 'Steadfast',    sub: '50 prayers',           req: s => s.totalPrayers >= 50 },
-  { id: 'streak_7',    icon: '💎', label: 'Devoted Soul', sub: '7-day streak',         req: s => s.streak >= 7 },
-  { id: 'all5_day',    icon: '🏆', label: 'Perfect Day',  sub: 'All 5 in one day',     req: s => s.perfectDays >= 1 },
-  { id: 'streak_30',   icon: '👑', label: 'Golden Path',  sub: '30-day streak',        req: s => s.streak >= 30 },
-  { id: 'prayers_100', icon: '💠', label: 'Century',      sub: '100 prayers',          req: s => s.totalPrayers >= 100 },
-];
-
-const QUOTES = [
-  { text: "The closest a servant comes to his Lord is when he is prostrating himself, so make many supplications in it.", attr: "Prophet Muhammad (ﷺ)" },
-  { text: "Verily, in the remembrance of Allah do hearts find rest.", attr: "Surah Ar-Ra'd 13:28" },
-  { text: "Prayer is the pillar of religion. Whoever establishes it, has established religion; whoever destroys it, has destroyed religion.", attr: "Prophet Muhammad (ﷺ)" },
-  { text: "And seek help through patience and prayer, and indeed, it is difficult except for the humbly submissive.", attr: "Surah Al-Baqarah 2:45" },
-  { text: "Make things easy and do not make them difficult, cheer the people up and do not repel them.", attr: "Prophet Muhammad (ﷺ)" },
-  { text: "Whoever follows a path in pursuit of knowledge, Allah will make easy for him a path to Paradise.", attr: "Prophet Muhammad (ﷺ)" },
-  { text: "Indeed, Allah does not allow to be lost the reward of the doers of good.", attr: "Surah At-Tawbah 9:120" },
-  { text: "And when My servants ask you concerning Me, indeed I am near.", attr: "Surah Al-Baqarah 2:186" },
-];
-
-const NOTIF_TITLES = ['Adhan', 'Jamaat Soon', 'Jamaat Now', 'Still Time', 'Mercy'];
-
-const NOTIF_MSGS = {
-  Fajr:    { T1: "Establish the dawn prayer. The recital at dawn is ever witnessed by the angels.", T2: "Fajr jamaat in 15 min — as if you prayed the entire night. Sahih Muslim 656", T3: "Prayer in congregation is 27× greater. Sahih Bukhari 645", T4: "Whoever prays Fajr is under Allah's protection. Sahih Muslim 657", T5: "Whoever forgets a prayer, let him pray it when he remembers. Sahih Bukhari 597" },
-  Dhuhr:   { T1: "When you stand for prayer, you stand before your Lord. Hayya ala Salah.", T2: "Dhuhr jamaat in 15 min. 4 sunnah with Dhuhr = a house in Paradise. Sahih Muslim 728", T3: "Each step toward the masjid raises your rank. Jamaat is starting.", T4: "The first deed questioned on Judgement Day is prayer. Tirmidhi 413", T5: "Do not despair of Allah's mercy. He forgives all sins. Qur'an 39:53" },
-  Asr:     { T1: "Prayer was made a light for the believer. Sahih Muslim 223", T2: "Asr jamaat in 15 min — pray Fajr and Asr and enter Paradise. Sahih Bukhari 574", T3: "Join the rows now. Congregation is 27° above praying alone. Sahih Bukhari 645", T4: "Whoever misses Asr — it is as if he lost his family and wealth. Sahih Bukhari 552", T5: "Allah loves those who turn to Him in repentance. Qur'an 2:222" },
-  Maghrib: { T1: "Hayya ala Salah. Answer your Lord's call as the day closes.", T2: "Maghrib jamaat in 15 min. Good deeds erase bad deeds. Qur'an 11:114", T3: "The angels invoke blessings upon you as long as you await the prayer.", T4: "Guard strictly your prayers. It is not logged yet. Qur'an 2:238", T5: "It is not too late. Pray now and seek forgiveness. Log as Qaza." },
-  Isha:    { T1: "Between a person and disbelief stands the abandonment of prayer. Stand now. Sahih Muslim 82", T2: "Isha jamaat in 15 min — as if you prayed half the night. Sahih Muslim 656", T3: "Prayer in congregation is 27 times greater than praying alone. Sahih Bukhari 645", T4: "Isha and Fajr are the most rewarding prayers. Do not let it pass. Sahih Bukhari 657", T5: "Do not despair of Allah's mercy. He forgives all sins. Qur'an 39:53" },
-};
-
-const JAMAAT_OFFSETS = { Fajr: 20, Dhuhr: 15, Asr: 15, Maghrib: 15, Isha: 15 };
-
-// ── State ─────────────────────────────────────────────────────────────────────
-const DEFAULT_STATE = {
-  prayerTimes: {}, timeMode: 'auto', calcMethod: '1', school: 0,
-  notifEnabled: false, notifOffset: 10, todayLogs: {},
-  streak: 0, lastDay: '', totalPrayers: 0, points: 0,
-  perfectDays: 0, activityLog: [], earnedBadges: [], location: '',
-};
-
-const KEY = 'salahpath_state';
-let state = { ...DEFAULT_STATE };
-let prayerTimesMinutes = {};
-let countdownInterval = null;
-let notifTimers = [];
-let currentScreen = 'dashboard';
-
-function loadState() {
-  try { const r = localStorage.getItem(KEY); return r ? { ...DEFAULT_STATE, ...JSON.parse(r) } : { ...DEFAULT_STATE }; }
-  catch { return { ...DEFAULT_STATE }; }
-}
-function saveState(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} }
-
-// ── Prayer time utils ─────────────────────────────────────────────────────────
-function parseHM(t) {
-  if (typeof t !== 'string') return null;
-  const m = t.match(/(\d{1,2}):(\d{2})/);
-  return m ? [+m[1], +m[2]] : null;
-}
-
-function formatTime12(t) {
-  const hm = parseHM(t);
-  if (!hm) return '—';
-  const [h, m] = hm;
-  return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
-}
-
-function parsePTM(times) {
-  const r = {};
-  for (const p of PRAYERS) { const hm = parseHM(times[p]); if (hm) r[p] = hm[0]*60+hm[1]; }
-  return r;
-}
-
-function getNextPrayer() {
-  const now = new Date().getHours()*60 + new Date().getMinutes();
-  for (const p of PRAYERS) {
-    if (prayerTimesMinutes[p] && prayerTimesMinutes[p] > now)
-      return { name: p, minutesLeft: prayerTimesMinutes[p]-now, timeStr: state.prayerTimes[p] };
+  function toggleMenu() {
+    document.getElementById('mobile-menu').classList.toggle('open');
   }
-  const fl = prayerTimesMinutes['Fajr'] || 300;
-  return { name: 'Fajr', minutesLeft: 1440-now+fl, timeStr: state.prayerTimes['Fajr'] };
-}
-
-function formatCountdown(min) {
-  const tot = Math.max(0, min*60 - new Date().getSeconds());
-  const h = Math.floor(tot/3600), m = Math.floor((tot%3600)/60), s = tot%60;
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-}
-
-// ── API ───────────────────────────────────────────────────────────────────────
-function fetchPrayerTimes() {
-  return new Promise((res, rej) => {
-    if (!navigator.geolocation) { rej(new Error('Geolocation not supported')); return; }
-    navigator.geolocation.getCurrentPosition(async pos => {
-      const { latitude: lat, longitude: lng } = pos.coords;
-      const d = new Date();
-      const dd = String(d.getDate()).padStart(2,'0'), mm = String(d.getMonth()+1).padStart(2,'0'), yyyy = d.getFullYear();
-      try {
-        const r = await fetch(`https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=${lat}&longitude=${lng}&method=${state.calcMethod}&school=${state.school}`);
-        const data = await r.json();
-        if (data.code !== 200) { rej(new Error('API error')); return; }
-        const t = data.data.timings;
-        const times = { Fajr: t.Fajr, Dhuhr: t.Dhuhr, Asr: t.Asr, Maghrib: t.Maghrib, Isha: t.Isha };
-        let loc = `${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E`;
-        try {
-          const g = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-          const gd = await g.json();
-          const city = gd.address?.city || gd.address?.town || gd.address?.village;
-          const country = gd.address?.country;
-          if (city || country) loc = [city, country].filter(Boolean).join(', ');
-        } catch {}
-        res({ times, locationName: loc });
-      } catch (e) { rej(e); }
-    }, rej, { timeout: 12000 });
-  });
-}
-
-// ── Day reset ─────────────────────────────────────────────────────────────────
-function checkDayReset(s) {
-  const today = new Date().toDateString();
-  if (s.lastDay === today) return s;
-  let streak = s.streak;
-  if (s.lastDay) {
-    const gap = Math.round((new Date(today)-new Date(s.lastDay)) / 86400000) || 1;
-    const any = Object.values(s.todayLogs||{}).some(v=>v);
-    const all = PRAYERS.every(p=>(s.todayLogs||{})[p]);
-    if (gap > 1) streak = 0;
-    else if (!any) streak = 0;
-    else if (all) streak = (streak||1)+1;
-  }
-  return { ...s, todayLogs: {}, lastDay: today, streak };
-}
-
-// ── Badges ────────────────────────────────────────────────────────────────────
-function checkBadges(s) {
-  const earned = [...(s.earnedBadges||[])];
-  let points = s.points;
-  const log = [...(s.activityLog||[])];
-  BADGES.forEach(b => {
-    if (!earned.includes(b.id) && b.req(s)) {
-      earned.push(b.id); points += 50;
-      log.push({ label: `Badge unlocked: ${b.label}`, time: 'Just now', pts: 50, type: 'badge' });
-      showToast(`Badge unlocked: ${b.label}! +50 pts`);
-    }
-  });
-  return { ...s, earnedBadges: earned, points, activityLog: log };
-}
-
-// ── Log prayer ────────────────────────────────────────────────────────────────
-function logPrayer(name, isQaza = false) {
-  if (state.todayLogs[name]) { showToast(`${name} already logged ✓`); return; }
-  const t = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const log = [...(state.activityLog||[])];
-  log.push({ label: isQaza ? `${name} logged as Qaza` : `${name} prayer logged`, time: t, pts: 10, type: 'prayer' });
-  let s = { ...state, todayLogs: { ...state.todayLogs, [name]: isQaza ? 'qaza' : true }, totalPrayers: state.totalPrayers+1, points: state.points+10, activityLog: log };
-  if (Object.values(s.todayLogs).filter(v=>v).length === 1 && s.streak === 0) s.streak = 1;
-  const allDone = PRAYERS.every(p => s.todayLogs[p] === true);
-  if (allDone) {
-    s.perfectDays = (s.perfectDays||0)+1; s.points += 25;
-    s.activityLog.push({ label: 'All 5 prayers completed 🎉', time: 'Today', pts: 25, type: 'badge' });
-    showToast('All 5 prayers done! +25 bonus pts 🎉');
-  } else {
-    showToast(isQaza ? `${name} logged as Qaza. +10 pts` : `${name} logged! +10 pts`);
-  }
-  s = checkBadges(s);
-  state = s;
-  saveState(state);
-  scheduleNotifications();
-  renderAll();
-}
-
-// ── Notifications ─────────────────────────────────────────────────────────────
-function clearNotifTimers() { notifTimers.forEach(clearTimeout); notifTimers = []; }
-
-async function scheduleNotifications() {
-  clearNotifTimers();
-  if (!state.notifEnabled || !('Notification' in window) || Notification.permission !== 'granted') return;
-  const now = Date.now();
-  const today = new Date();
-  for (const p of PRAYERS) {
-    const hm = parseHM(state.prayerTimes[p]);
-    if (!hm) continue;
-    const adhanMs = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hm[0], hm[1], 0).getTime();
-    const jamaatMs = adhanMs + JAMAAT_OFFSETS[p]*60000;
-    const tiers = [
-      { t: 1, ms: adhanMs },
-      { t: 2, ms: jamaatMs - 15*60000 },
-      { t: 3, ms: jamaatMs },
-      { t: 4, ms: jamaatMs + 15*60000 },
-      { t: 5, ms: jamaatMs + 30*60000 },
-    ];
-    for (const { t, ms } of tiers) {
-      if (ms <= now) continue;
-      if (state.todayLogs[p] && (t === 4 || t === 5)) continue;
-      const body = NOTIF_MSGS[p]?.[`T${t}`];
-      if (!body) continue;
-      const id = setTimeout(() => {
-        try {
-          new Notification(`${p} — ${NOTIF_TITLES[t-1]}`, { body, tag: `${p}-T${t}`, icon: './icons/icon-192.png.png' });
-        } catch {}
-      }, ms - now);
-      notifTimers.push(id);
-    }
-  }
-}
-
-async function toggleNotifications(enabled) {
-  if (enabled) {
-    if (!('Notification' in window)) { showToast('Notifications not supported in this browser'); return; }
-    const perm = await Notification.requestPermission();
-    if (perm !== 'granted') { showToast('Notification permission denied ⚠️'); renderSettings(); return; }
-    state = { ...state, notifEnabled: true };
-    saveState(state);
-    await scheduleNotifications();
-    showToast('Notifications enabled 🔔');
-  } else {
-    clearNotifTimers();
-    state = { ...state, notifEnabled: false };
-    saveState(state);
-    showToast('Notifications disabled 🔕');
-  }
-  renderSettings();
-}
-
-// ── Toast ─────────────────────────────────────────────────────────────────────
-let toastTimer;
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('visible');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('visible'), 3000);
-}
-
-// ── Modal ─────────────────────────────────────────────────────────────────────
-function openQazaModal(prayer) {
-  document.getElementById('modal-content').innerHTML = `
-    <div class="modal-title">${prayer} Prayer</div>
-    <div class="modal-body">More than 90 minutes have passed since ${prayer} time. Did you offer this prayer on time, or would you like to log it as Qaza?</div>
-    <button class="modal-btn primary" onclick="logPrayer('${prayer}', false); closeModal()">✓ Offered on Time</button>
-    <button class="modal-btn secondary" onclick="logPrayer('${prayer}', true); closeModal()">📿 Log as Qaza</button>
-    <button class="modal-btn ghost" onclick="closeModal()">Cancel</button>
-  `;
-  document.getElementById('modal-overlay').classList.add('visible');
-}
-function closeModal() { document.getElementById('modal-overlay').classList.remove('visible'); }
-
-// ── Render: Dashboard ─────────────────────────────────────────────────────────
-function renderDashboard() {
-  const nowMin = new Date().getHours()*60 + new Date().getMinutes();
-  const next = getNextPrayer();
-  const done = PRAYERS.filter(p => state.todayLogs[p]).length;
-  const quote = QUOTES[new Date().getDate() % QUOTES.length];
-
-  document.getElementById('header-next').textContent =
-    next ? `${next.name}: ${formatTime12(next.timeStr)}` : '';
-
-  const circles = PRAYERS.map(p => {
-    const logged = state.todayLogs[p];
-    const pMin = prayerTimesMinutes[p] || 0;
-    const started = nowMin >= pMin;
-    const isNext = next?.name === p && !started;
-    const missed = started && !logged && (nowMin-pMin) > 90;
-    const current = started && !logged && (nowMin-pMin) <= 90;
-    let bg = 'var(--surface-container)', border = 'var(--outline-variant)', nameC = 'var(--primary)', bStyle = 'solid';
-    let opacity = started || isNext ? 1 : 0.4;
-    if (logged)  { bg='#dcfce7'; border='#86efac'; nameC='#15803d'; }
-    else if (missed)  { bg='var(--error-container)'; border='var(--error)'; nameC='var(--error)'; }
-    else if (current) { bg='var(--primary-fixed)'; border='var(--primary)'; }
-    else if (isNext)  { bg='var(--surface-container-high)'; border='var(--primary)'; bStyle='dashed'; }
-    return `<div class="circle-wrap" onclick="handlePrayerPress('${p}')">
-      <div class="circle" style="background:${bg};border-color:${border};border-style:${bStyle};opacity:${opacity}">${PRAYER_ICONS[p]}</div>
-      <span class="circle-name" style="color:${nameC}">${p}</span>
-      <span class="circle-time">${formatTime12(state.prayerTimes[p])}</span>
-    </div>`;
-  }).join('');
-
-  const schedule = PRAYERS.map(p => {
-    const logged = state.todayLogs[p];
-    const pMin = prayerTimesMinutes[p] || 0;
-    const started = nowMin >= pMin;
-    const isNext = next?.name === p && !started;
-    const missed = started && !logged && (nowMin-pMin) > 90;
-    const current = started && !logged && (nowMin-pMin) <= 90;
-    let stxt = formatTime12(state.prayerTimes[p]), sc = 'var(--on-surface-variant)', sb = 'var(--surface-container)';
-    if (logged)   { stxt = logged === 'qaza' ? 'Qaza ✓' : '✓ Done'; sc='#15803d'; sb='#dcfce7'; }
-    else if (isNext)  { stxt='Up Next'; sc='var(--primary)'; sb='var(--primary-fixed)'; }
-    else if (missed)  { stxt='Missed'; sc='var(--error)'; sb='var(--error-container)'; }
-    else if (current) { stxt='Pray now'; sc='var(--primary)'; sb='var(--primary-fixed)'; }
-    return `<div class="schedule-row" onclick="handlePrayerPress('${p}')">
-      <div class="schedule-icon-wrap">${PRAYER_ICONS[p]}</div>
-      <div class="schedule-info">
-        <div class="schedule-name">${p}</div>
-        <div class="schedule-sub">${PRAYER_SUBTITLES[p]} · ${formatTime12(state.prayerTimes[p])}</div>
-      </div>
-      <div class="status-badge" style="background:${sb};color:${sc}">${stxt}</div>
-    </div>`;
-  }).join('');
-
-  const streakSub = state.streak === 0 ? 'Start logging to build your streak.'
-    : state.streak < 7 ? `${7-state.streak} more days to "Devoted Soul" badge!`
-    : 'MashaAllah! Keep going!';
-
-  document.getElementById('dashboard-content').innerHTML = `
-    <div class="hero-card">
-      <div class="hero-label">NEXT PRAYER</div>
-      <div class="hero-name">${next?.name || '—'}</div>
-      <div class="hero-time">${formatTime12(next?.timeStr)}</div>
-      <div class="countdown-box">
-        <div class="countdown-label">TIME REMAINING</div>
-        <div id="countdown-display">${formatCountdown(next?.minutesLeft || 0)}</div>
-        <div class="location-text">${state.location || 'Detecting location…'}</div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="devotion-header">
-        <div>
-          <div class="card-title" style="margin-bottom:2px">Daily Devotion</div>
-          <div style="font-size:13px;color:var(--on-surface-variant)">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="done-count">${done}/5</div>
-          <div class="done-label">COMPLETED</div>
-        </div>
-      </div>
-      <div class="circles-row">${circles}</div>
-      <div class="streak-box">
-        <span class="streak-fire">🔥</span>
-        <div>
-          <div class="streak-text">Current Streak: <span class="streak-num">${state.streak} Days</span></div>
-          <div class="streak-sub">${streakSub}</div>
-        </div>
-      </div>
-    </div>
-    <div class="quote-card">
-      <div class="quote-icon">❝</div>
-      <div class="quote-text">"${quote.text}"</div>
-      <div class="quote-line"></div>
-      <div class="quote-attr">${quote.attr}</div>
-    </div>
-    <div class="card schedule-card">
-      <div class="schedule-card-title">Today's Schedule</div>
-      ${schedule}
-    </div>
-    <div class="bottom-pad"></div>
-  `;
-  startCountdown();
-}
-
-function handlePrayerPress(p) {
-  if (state.todayLogs[p]) { openUndoModal(p); return; }
-  const nowMin = new Date().getHours()*60 + new Date().getMinutes();
-  const pMin = prayerTimesMinutes[p] || 0;
-  if (nowMin < pMin) { showToast(`${p} time hasn't started yet`); return; }
-  nowMin - pMin > 90 ? openQazaModal(p) : logPrayer(p);
-}
-
-function openUndoModal(prayer) {
-  const label = state.todayLogs[prayer] === 'qaza' ? `${prayer} (Qaza) ✓` : `${prayer} ✓ Logged`;
-  document.getElementById('modal-content').innerHTML = `
-    <div class="modal-title">${label}</div>
-    <div class="modal-body">Do you want to undo this log? Your points and prayer count will be adjusted.</div>
-    <button class="modal-btn primary" onclick="unlogPrayer('${prayer}'); closeModal()">↩ Undo Log</button>
-    <button class="modal-btn ghost" onclick="closeModal()">Keep It</button>
-  `;
-  document.getElementById('modal-overlay').classList.add('visible');
-}
-
-function unlogPrayer(name) {
-  if (!state.todayLogs[name]) return;
-  const wasQaza = state.todayLogs[name] === 'qaza';
-  const wasAllDone = PRAYERS.every(p => state.todayLogs[p] === true);
-
-  const newLogs = { ...state.todayLogs };
-  delete newLogs[name];
-
-  let pointsToDeduct = 10;
-  let perfectDays = state.perfectDays;
-  let actLog = [...(state.activityLog || [])];
-
-  if (wasAllDone) {
-    pointsToDeduct += 25;
-    perfectDays = Math.max(0, perfectDays - 1);
-    const i = actLog.findLastIndex(l => l.label === 'All 5 prayers completed 🎉');
-    if (i !== -1) actLog.splice(i, 1);
-  }
-  const pLabel = wasQaza ? `${name} logged as Qaza` : `${name} prayer logged`;
-  const j = actLog.findLastIndex(l => l.label === pLabel);
-  if (j !== -1) actLog.splice(j, 1);
-
-  const remainingCount = Object.values(newLogs).filter(v => v).length;
-  let streak = state.streak;
-  if (remainingCount === 0 && streak === 1) streak = 0;
-
-  state = { ...state, todayLogs: newLogs, totalPrayers: Math.max(0, state.totalPrayers - 1), points: Math.max(0, state.points - pointsToDeduct), perfectDays, activityLog: actLog, streak };
-  saveState(state);
-  scheduleNotifications();
-  renderAll();
-  showToast(`${name} log removed ↩`);
-}
-
-function startCountdown() {
-  clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => {
-    const el = document.getElementById('countdown-display');
-    if (!el) { clearInterval(countdownInterval); return; }
-    el.textContent = formatCountdown(getNextPrayer()?.minutesLeft || 0);
-  }, 1000);
-}
-
-// ── Render: Settings ──────────────────────────────────────────────────────────
-function renderSettings() {
-  const methods = CALC_METHODS.map(m => `<button class="method-btn ${state.calcMethod===m.value?'active':''}" onclick="setCalcMethod('${m.value}')">${m.label}</button>`).join('');
-  const ptRows = PRAYERS.map(p => `
-    <div class="prayer-row">
-      <span class="prayer-emoji">${PRAYER_ICONS[p]}</span>
-      <div style="flex:1"><div class="prayer-name-text">${p}</div><div class="prayer-sub-text">${PRAYER_SUBTITLES[p]}</div></div>
-      ${state.timeMode==='manual'
-        ? `<input type="time" value="${state.prayerTimes[p]||''}" onchange="applyManualTime('${p}',this.value)">`
-        : `<span class="prayer-time-text">${formatTime12(state.prayerTimes[p])}</span>`}
-    </div>`).join('');
-  const offsets = [0,5,10,15,30].map(n => `<button class="offset-btn ${state.notifOffset===n?'active':''}" onclick="setNotifOffset(${n})">${n===0?'At time':`${n}m`}</button>`).join('');
-  const notifSupported = 'Notification' in window;
-
-  document.getElementById('settings-content').innerHTML = `
-    <div class="settings-section top-pad">
-      <div class="section-title">Prayer Time Settings</div>
-      <div class="section-sub">Choose how your prayer times are calculated.</div>
-      <div class="card">
-        <div class="card-label">Time Source</div>
-        <div class="toggle-row">
-          <button class="mode-btn ${state.timeMode!=='manual'?'active':''}" onclick="setTimeMode('auto')">📍 Auto (GPS)</button>
-          <button class="mode-btn ${state.timeMode==='manual'?'active':''}" onclick="setTimeMode('manual')">✏️ Manual</button>
-        </div>
-        ${state.timeMode!=='manual' ? `
-          <div class="field-label">CALCULATION METHOD</div>
-          <div class="method-list">${methods}</div>
-          <div class="field-label">JURISTIC SCHOOL (ASR)</div>
-          <div class="toggle-row">
-            <button class="mode-btn ${state.school===0?'active':''}" onclick="setSchool(0)">Shafi'i</button>
-            <button class="mode-btn ${state.school===1?'active':''}" onclick="setSchool(1)">Hanafi</button>
-          </div>
-          ${state.location ? `<div class="location-info">📍 ${state.location}</div>` : ''}
-        ` : ''}
-      </div>
-    </div>
-    <div class="settings-section">
-      <div class="card">
-        <div class="card-label">Prayer Times ${state.timeMode==='manual'?'<span class="manual-badge">MANUAL</span>':''}</div>
-        ${ptRows}
-      </div>
-    </div>
-    <div class="settings-section">
-      <div class="card">
-        <div class="card-label">🔔 Notifications</div>
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-name-text">Prayer Reminders (5-tier)</div>
-            <div class="setting-sub-text">${
-              !notifSupported ? 'Not supported in this browser'
-              : Notification.permission === 'granted' && state.notifEnabled ? '🟢 Active — notifications are scheduled'
-              : Notification.permission === 'denied' ? '🔴 Blocked — allow in browser site settings'
-              : 'Works while the app is open on Android Chrome'
-            }</div>
-          </div>
-          ${notifSupported ? `
-            <label class="toggle-switch">
-              <input type="checkbox" ${state.notifEnabled?'checked':''} onchange="toggleNotifications(this.checked)">
-              <span class="toggle-slider"></span>
-            </label>` : '<span style="font-size:11px;color:var(--error)">Unsupported</span>'}
-        </div>
-        <div class="field-label">REMINDER OFFSET (BEFORE ADHAN)</div>
-        <div class="offset-row">${offsets}</div>
-      </div>
-    </div>
-    <div class="settings-section">
-      <div class="card">
-        <div class="card-label">🗂️ Data & Reset</div>
-        <button class="danger-btn" onclick="resetToday()">↺ Reset Today's Logs</button>
-      </div>
-    </div>
-    <div class="bottom-pad"></div>
-  `;
-}
-
-function setTimeMode(mode) {
-  state = { ...state, timeMode: mode }; saveState(state); renderSettings();
-  if (mode === 'auto') {
-    showToast('Fetching prayer times… 🔄');
-    fetchPrayerTimes().then(({ times, locationName }) => {
-      prayerTimesMinutes = parsePTM(times);
-      state = { ...state, prayerTimes: times, location: locationName }; saveState(state);
-      showToast('Times updated! ✓'); renderAll(); scheduleNotifications();
-    }).catch(() => showToast('Could not fetch times ⚠️'));
-  }
-}
-
-function setCalcMethod(val) {
-  state = { ...state, calcMethod: val }; saveState(state); renderSettings();
-  showToast('Refreshing… 🔄');
-  fetchPrayerTimes().then(({ times, locationName }) => {
-    prayerTimesMinutes = parsePTM(times);
-    state = { ...state, prayerTimes: times, location: locationName }; saveState(state);
-    showToast('Times updated! ✓'); renderAll();
-  }).catch(() => showToast('Could not fetch times ⚠️'));
-}
-
-function setSchool(val) {
-  state = { ...state, school: val }; saveState(state); renderSettings();
-  fetchPrayerTimes().then(({ times, locationName }) => {
-    prayerTimesMinutes = parsePTM(times);
-    state = { ...state, prayerTimes: times, location: locationName }; saveState(state); renderAll();
-  }).catch(() => {});
-}
-
-function applyManualTime(prayer, val) {
-  if (!val) return;
-  const times = { ...state.prayerTimes, [prayer]: val };
-  state = { ...state, prayerTimes: times, timeMode: 'manual' };
-  prayerTimesMinutes = parsePTM(times); saveState(state);
-  renderDashboard(); scheduleNotifications();
-}
-
-function setNotifOffset(n) {
-  state = { ...state, notifOffset: n }; saveState(state); renderSettings(); scheduleNotifications();
-}
-
-function resetToday() {
-  if (!confirm("Clear today's prayer logs? Points and prayer count for today will also be reversed.")) return;
-  const loggedPrayers = PRAYERS.filter(p => state.todayLogs[p]);
-  const wasAllDone = PRAYERS.every(p => state.todayLogs[p] === true);
-  const pointsToDeduct = loggedPrayers.length * 10 + (wasAllDone ? 25 : 0);
-  state = {
-    ...state,
-    todayLogs: {},
-    totalPrayers: Math.max(0, state.totalPrayers - loggedPrayers.length),
-    points: Math.max(0, state.points - pointsToDeduct),
-    perfectDays: wasAllDone ? Math.max(0, state.perfectDays - 1) : state.perfectDays,
-    streak: loggedPrayers.length > 0 && state.streak <= 1 ? 0 : state.streak,
-    activityLog: [],
-  };
-  saveState(state); scheduleNotifications(); renderAll(); showToast("Today's logs cleared ↺");
-}
-
-// ── Render: Rewards ───────────────────────────────────────────────────────────
-function renderRewards() {
-  const log = (state.activityLog||[]).slice(-20).reverse();
-  const badges = BADGES.map(b => {
-    const earned = (state.earnedBadges||[]).includes(b.id) || b.req(state);
-    return `<div class="badge-item ${earned?'':'locked'}">
-      <div class="badge-circle ${earned?'earned':'locked-c'}">${earned?b.icon:'🔒'}</div>
-      <div class="badge-label">${b.label}</div>
-      <div class="badge-sub">${b.sub}</div>
-    </div>`;
-  }).join('');
-  const logHtml = log.length === 0
-    ? '<div class="empty-text">No activity yet. Start logging prayers!</div>'
-    : log.map(item => `<div class="log-item">
-        <div class="log-icon-wrap" style="background:${item.type==='badge'?'var(--secondary-fixed)':'var(--primary-fixed)'}">${item.type==='badge'?'🏅':'✓'}</div>
-        <div class="log-info"><div class="log-label">${item.label}</div><div class="log-time-text">${item.time}</div></div>
-        <div class="pts-badge">+${item.pts} pts</div>
-      </div>`).join('');
-
-  document.getElementById('rewards-content').innerHTML = `
-    <div style="padding:20px 20px 8px">
-      <div style="font-size:24px;font-weight:700;color:var(--primary);font-family:Georgia,serif">Rewards & Motivation</div>
-      <div style="font-size:13px;color:var(--on-surface-variant);margin-top:4px">Your spiritual achievements and earned badges</div>
-    </div>
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-num">${state.streak}</div><div class="stat-label">DAY STREAK</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:var(--secondary)">${state.totalPrayers}</div><div class="stat-label">PRAYERS LOGGED</div></div>
-      <div class="stat-card"><div class="stat-num">${state.points}</div><div class="stat-label">TOTAL POINTS</div></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Achievement Badges</div>
-      <div class="badges-grid">${badges}</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Recent Activity</div>
-      ${logHtml}
-    </div>
-    <div class="bottom-pad"></div>
-  `;
-}
-
-// ── Navigation ────────────────────────────────────────────────────────────────
-function navigate(screen) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(`screen-${screen}`).classList.add('active');
-  document.getElementById(`nav-${screen}`).classList.add('active');
-  currentScreen = screen;
-  if (screen === 'dashboard') renderDashboard();
-  else if (screen === 'settings') renderSettings();
-  else if (screen === 'rewards') renderRewards();
-}
-
-function renderAll() {
-  if (currentScreen === 'dashboard') renderDashboard();
-  else if (currentScreen === 'settings') renderSettings();
-  else if (currentScreen === 'rewards') renderRewards();
-}
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-async function init() {
-  state = loadState();
-  state = checkDayReset(state);
-  saveState(state);
-
-  // Show app immediately if we have cached times
-  if (Object.keys(state.prayerTimes).length === 5) {
-    prayerTimesMinutes = parsePTM(state.prayerTimes);
-    document.getElementById('loading').classList.add('hidden');
-    renderDashboard();
-  }
-
-  if (state.timeMode !== 'manual') {
-    try {
-      const { times, locationName } = await fetchPrayerTimes();
-      prayerTimesMinutes = parsePTM(times);
-      state = { ...state, prayerTimes: times, location: locationName };
-      saveState(state);
-      renderAll();
-      scheduleNotifications();
-    } catch (err) {
-      if (Object.keys(state.prayerTimes).length === 0) {
-        // Use fallback times so the UI is never blank
-        const fallback = { Fajr:'05:00', Dhuhr:'12:30', Asr:'16:00', Maghrib:'19:15', Isha:'20:30' };
-        prayerTimesMinutes = parsePTM(fallback);
-        state = { ...state, prayerTimes: fallback, location: 'Default — set location in Settings' };
-        saveState(state);
-        showToast('Location unavailable. Using default times — set manually in Settings ⚠️');
-      }
-    }
-  } else {
-    prayerTimesMinutes = parsePTM(state.prayerTimes);
-    scheduleNotifications();
-  }
-
-  document.getElementById('loading').classList.add('hidden');
-  renderAll();
-
-  // Check day rollover every minute
-  setInterval(() => {
-    const next = checkDayReset(state);
-    if (next !== state) { state = next; saveState(state); renderAll(); }
-  }, 60000);
-}
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
-}
-
-init();
 </script>
 </body>
 </html>
